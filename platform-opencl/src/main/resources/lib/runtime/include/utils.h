@@ -1,9 +1,11 @@
 #pragma once
-#include "Translation.hpp"
-#include "opencl_arguments.hpp"
+
+#include "Translation.h"
+#include "opencl_arguments.h"
 
 //Parts of the Source Code from intel template
 cl_int SetupOpenCL(opencl_arguments *ocl, cl_device_type deviceType, std::string platformName);
+
 //Parts of the Source Code from intel template
 cl_int CreateAndBuildProgram(opencl_arguments *ocl, std::string fileName);
 
