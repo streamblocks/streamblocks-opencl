@@ -22,24 +22,7 @@ import se.lth.cs.tycho.compiler.UniqueNumbers;
 import se.lth.cs.tycho.ir.entity.Entity;
 import se.lth.cs.tycho.ir.network.Instance;
 import se.lth.cs.tycho.phase.TreeShadow;
-import streamblocks.opencl.backend.emitters.Algebraic;
-import streamblocks.opencl.backend.emitters.Alias;
-import streamblocks.opencl.backend.emitters.CMakeLists;
-import streamblocks.opencl.backend.emitters.Callables;
-import streamblocks.opencl.backend.emitters.Channels;
-import streamblocks.opencl.backend.emitters.Controllers;
-import streamblocks.opencl.backend.emitters.Declarations;
-import streamblocks.opencl.backend.emitters.DefaultValues;
-import streamblocks.opencl.backend.emitters.Expressions;
-import streamblocks.opencl.backend.emitters.Free;
-import streamblocks.opencl.backend.emitters.Instances;
-import streamblocks.opencl.backend.emitters.PatternMatching;
-import streamblocks.opencl.backend.emitters.Serialization;
-import streamblocks.opencl.backend.emitters.SizeOf;
-import streamblocks.opencl.backend.emitters.Statements;
-import streamblocks.opencl.backend.emitters.Tuples;
-import streamblocks.opencl.backend.emitters.TypesEvaluator;
-import streamblocks.opencl.backend.emitters.Variables;
+import streamblocks.opencl.backend.emitters.*;
 
 import static org.multij.BindingKind.INJECTED;
 import static org.multij.BindingKind.LAZY;
@@ -267,6 +250,16 @@ public interface OpenCLBackend {
     @Binding(LAZY)
     default Controllers controllers() {
         return MultiJ.from(Controllers.class).bind("backend").to(this).instance();
+    }
+
+    @Binding(LAZY)
+    default Main main() {
+        return MultiJ.from(Main.class).bind("backend").to(this).instance();
+    }
+
+    @Binding(LAZY)
+    default Globals globals() {
+        return MultiJ.from(Globals.class).bind("backend").to(this).instance();
     }
 
     @Binding(LAZY)

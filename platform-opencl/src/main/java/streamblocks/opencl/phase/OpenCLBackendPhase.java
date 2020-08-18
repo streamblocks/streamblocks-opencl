@@ -17,6 +17,7 @@ import se.lth.cs.tycho.reporting.Diagnostic;
 import se.lth.cs.tycho.reporting.Reporter;
 import se.lth.cs.tycho.settings.Setting;
 import streamblocks.opencl.backend.OpenCLBackend;
+import streamblocks.opencl.platform.OpenCL;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -158,6 +159,24 @@ public class OpenCLBackendPhase implements Phase {
         }
     }
 
+    private void generateGlobals(OpenCLBackend backend){
+        backend.globals().generateSource();
+
+        backend.globals().generateHeader();
+    }
+
+    private void generateMain(OpenCLBackend backend){
+        backend.main().generateMain();
+    }
+
+    private void generateCMakeLists(OpenCLBackend backend){
+        // -- Project CMakeLists.txt
+        backend.cmakelists().projectCMakeLists();
+
+        // -- Code generation CMakeLists.txt
+        backend.cmakelists().codegenCMakeLists();
+    }
+
     @Override
     public CompilationTask execute(CompilationTask task, Context context) throws CompilationException {
         // -- Get Reporter
@@ -180,6 +199,15 @@ public class OpenCLBackendPhase implements Phase {
 
         // -- Generate instances
         generateInstances(backend);
+
+        // -- Generate globals
+        generateGlobals(backend);
+
+        // -- Generate Main (Network)
+        generateMain(backend);
+
+        // --Generate CMakeLists
+        generateCMakeLists(backend);
 
         // -- Copy Resources
         copyResources(backend);

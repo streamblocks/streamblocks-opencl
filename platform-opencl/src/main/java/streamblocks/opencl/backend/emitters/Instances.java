@@ -8,6 +8,7 @@ import org.multij.BindingKind;
 import org.multij.Module;
 import se.lth.cs.tycho.attribute.GlobalNames;
 import se.lth.cs.tycho.attribute.Types;
+import se.lth.cs.tycho.ir.Annotation;
 import se.lth.cs.tycho.ir.Parameter;
 import se.lth.cs.tycho.ir.decl.GlobalEntityDecl;
 import se.lth.cs.tycho.ir.decl.ParameterVarDecl;
@@ -19,18 +20,14 @@ import se.lth.cs.tycho.ir.entity.am.PortCondition;
 import se.lth.cs.tycho.ir.entity.am.PredicateCondition;
 import se.lth.cs.tycho.ir.entity.am.Scope;
 import se.lth.cs.tycho.ir.entity.am.Transition;
-import se.lth.cs.tycho.ir.expr.ExprComprehension;
-import se.lth.cs.tycho.ir.expr.ExprInput;
-import se.lth.cs.tycho.ir.expr.ExprLambda;
-import se.lth.cs.tycho.ir.expr.ExprList;
-import se.lth.cs.tycho.ir.expr.ExprProc;
-import se.lth.cs.tycho.ir.expr.Expression;
+import se.lth.cs.tycho.ir.expr.*;
 import se.lth.cs.tycho.ir.network.Instance;
 import se.lth.cs.tycho.type.CallableType;
 import se.lth.cs.tycho.type.Type;
 import streamblocks.opencl.backend.OpenCLBackend;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 @Module
 public interface Instances {
@@ -343,8 +340,6 @@ public interface Instances {
     // -- Scopes
 
     default void scope(String instanceName, Scope scope, int index) {
-        // -- Actor Instance Name
-        String className = "class_" + instanceName;
         if (scope.getDeclarations().size() > 0 || scope.isPersistent()) {
             if (index != 0) {
                 emitter().emit("%s{", scopePrototype(instanceName, scope, index, true));
@@ -409,7 +404,11 @@ public interface Instances {
     // -- Transitions
 
     default void transition(String instanceName, Transition transition, int index) {
-        // -- Actor Instance Name
+        Optional<Annotation> annotation = Annotation.getAnnotationWithName("ActionId", transition.getAnnotations());
+        if (annotation.isPresent()) {
+            String actionTag = ((ExprLiteral) annotation.get().getParameters().get(0).getExpression()).getText();
+            emitter().emit("// -- Action Tag : %s", actionTag);
+        }
         emitter().emit("%s{", transitionPrototype(instanceName, transition, index, true));
         {
             emitter().increaseIndentation();
