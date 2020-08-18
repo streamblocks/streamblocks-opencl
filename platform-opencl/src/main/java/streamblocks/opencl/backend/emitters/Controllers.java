@@ -46,7 +46,7 @@ public interface Controllers {
         emitter().emit("bool progress = false;");
         emitter().emit("");
 
-        jumpInto(waitTargets.stream().mapToInt(stateMap::get).collect(BitSet::new, BitSet::set, BitSet::or));
+        jumpInto(waitTargets.stream().mapToInt(stateMap::get).collect(BitSet::new, BitSet::set, BitSet::or), stateMap.get(actorMachine.controller().getInitialState()));
 
         Function<Instruction, BitSet> initialize;
         if (backend().context().getConfiguration().get( PlatformSettings.scopeLivenessAnalysis)) {
@@ -106,9 +106,10 @@ public interface Controllers {
         emitter().emit("");
     }
 
-    default void jumpInto(BitSet waitTargets) {
+    default void jumpInto(BitSet waitTargets, int initialState) {
         emitter().emit("switch (this->program_counter) {");
         waitTargets.stream().forEach(s -> emitter().emit("case %d: goto S%1$d;", s));
+        emitter().emit("default: goto S%d;", initialState);
         emitter().emit("}");
         emitter().emit("");
     }

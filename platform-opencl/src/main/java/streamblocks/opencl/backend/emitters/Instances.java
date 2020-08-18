@@ -253,6 +253,12 @@ public interface Instances {
         {
             emitter().increaseIndentation();
 
+
+            // -- Program counter
+            emitter().emit("// -- Program counter");
+            emitter().emit("program_counter = %d;", backend().controllers().stateMap(actor.controller().getStateList()).get(actor.controller().getInitialState()));
+            emitter().emitNewLine();
+
             for (Scope scope : actor.getScopes()) {
                 if (!scope.getDeclarations().isEmpty()) {
                     emitter().emit("// -- Scope %d", actor.getScopes().indexOf(scope));
