@@ -71,11 +71,11 @@ public interface Expressions {
         return backend().variables();
     }
 
-    default Declarations declarations(){
+    default Declarations declarations() {
         return backend().declarations();
     }
 
-    default TypesEvaluator typeseval(){
+    default TypesEvaluator typeseval() {
         return backend().typeseval();
     }
 
@@ -87,11 +87,11 @@ public interface Expressions {
     }
 
     default String evaluate(ExprRef ref) {
-        return "(&"+variables().name(ref.getVariable())+")";
+        return "(&" + variables().name(ref.getVariable()) + ")";
     }
 
     default String evaluate(ExprDeref deref) {
-        return "(*"+evaluate(deref.getReference())+")";
+        return "(*" + evaluate(deref.getReference()) + ")";
     }
 
     default String evaluate(ExprGlobalVariable variable) {
@@ -132,9 +132,9 @@ public interface Expressions {
             }
         } else {
             if (input.getOffset() == 0) {
-                emitter().emit("%s = channel_peek_first_%s(self->%s_channel);", tmp, backend().channels().inputPortTypeSize(input.getPort()), input.getPort().getName());
+                emitter().emit("%s = %s$FIFO.element_preview(0);", tmp, input.getPort().getName());
             } else {
-                emitter().emit("channel_peek_%s(self->%s_channel, %d, 1, &%s);", backend().channels().inputPortTypeSize(input.getPort()), input.getPort().getName(), input.getOffset(), tmp);
+                emitter().emit("%s = %s$FIFO.element_preview(%s);", tmp, input.getPort().getName(), input.getOffset());
             }
         }
         return tmp;
@@ -639,7 +639,7 @@ public interface Expressions {
     }
 
     default String evaluateUnaryMinus(NumberType type, ExprUnaryOp expr) {
-        return String.format("-(%s)",evaluate(expr.getOperand()));
+        return String.format("-(%s)", evaluate(expr.getOperand()));
     }
 
     default String evaluateUnaryInvert(Type type, ExprUnaryOp expr) {
@@ -647,7 +647,7 @@ public interface Expressions {
     }
 
     default String evaluateUnaryInvert(IntType type, ExprUnaryOp expr) {
-        return String.format("~(%s)",evaluate(expr.getOperand()));
+        return String.format("~(%s)", evaluate(expr.getOperand()));
     }
 
     default String evaluateUnaryNot(Type type, ExprUnaryOp expr) {
@@ -655,7 +655,7 @@ public interface Expressions {
     }
 
     default String evaluateUnaryNot(BoolType type, ExprUnaryOp expr) {
-        return String.format("!(%s)",evaluate(expr.getOperand()));
+        return String.format("!(%s)", evaluate(expr.getOperand()));
     }
 
     default String evaluateUnaryDom(Type type, ExprUnaryOp expr) {
@@ -721,6 +721,7 @@ public interface Expressions {
     }
 
     void evaluateListComprehension(Expression comprehension, String result, String index);
+
     default void evaluateListComprehension(ExprComprehension comprehension, String result, String index) {
         if (!comprehension.getFilters().isEmpty()) {
             throw new UnsupportedOperationException("Filters in comprehensions not supported.");
@@ -774,7 +775,7 @@ public interface Expressions {
                         if (elementType instanceof AlgebraicType || backend().alias().isAlgebraicType(elementType)) {
                             String tmp = variables().generateTemp();
                             emitter().emit("%s = %s;", backend().declarations().declaration(elementType, tmp), backend().defaultValues().defaultValue(elementType));
-                            backend().statements().copy(elementType, tmp, elementType , evaluate(element));
+                            backend().statements().copy(elementType, tmp, elementType, evaluate(element));
                             return tmp;
                         }
                         return evaluate(element);
@@ -840,7 +841,9 @@ public interface Expressions {
     default String evaluate(ExprIndexer indexer) {
         return exprIndexing(types().type(indexer.getStructure()), indexer);
     }
+
     String exprIndexing(Type type, ExprIndexer indexer);
+
     default String exprIndexing(ListType type, ExprIndexer indexer) {
         return String.format("%s.data[%s]", evaluate(indexer.getStructure()), evaluate(indexer.getIndex()));
     }
@@ -909,7 +912,7 @@ public interface Expressions {
         } else {
             String name = evaluate(apply.getFunction());
             fn = name + ".f";
-            parameters.add(name+".env");
+            parameters.add(name + ".env");
         }
         for (Expression parameter : apply.getArgs()) {
             String param = evaluate(parameter);

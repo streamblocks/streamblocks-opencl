@@ -65,8 +65,8 @@ public interface Declarations {
     }
 
 
-    default String portDeclaration(PortDecl portDecl){
+    default String portDeclaration(PortDecl portDecl, String prefix) {
         Type type = types().declaredPortType(portDecl);
-        return String.format("hls::stream< %s> &%s", declaration(type, ""), portDecl.getName());
+        return String.format("Port< %s, %d > &%s$FIFO", declaration(type, ""), 4096, prefix + portDecl.getName());
     }
 }

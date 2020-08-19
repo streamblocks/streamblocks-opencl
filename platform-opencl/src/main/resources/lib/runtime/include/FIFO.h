@@ -35,6 +35,8 @@ public:
 
     T element_preview(int offset = 0);
 
+    void consume(int elements_count);
+
     T *get_data_ptr() const;
 
     int get_write_index() const;
@@ -81,6 +83,13 @@ template<typename T, int N>
 void FIFO<T, N>::get_elements(T *elements, int elements_count) {
     for (int i = 0; i < elements_count; i++) {
         elements[i] = get_element();
+    }
+}
+
+template<typename T, int N>
+void FIFO<T, N>::consume(int elements_count) {
+    for (int i = 0; i < elements_count; i++) {
+        get_element();
     }
 }
 

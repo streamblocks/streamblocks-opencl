@@ -5,7 +5,7 @@
 #include <initializer_list>
 #include <functional>
 #include "FIFO.h"
-#include <CL/cl.hpp>
+#include "cl.h"
 #include "utils.h"
 
 using namespace std;
@@ -34,6 +34,8 @@ public:
     void put_elements(T *elements, int element_count);
 
     T element_preview(int offset = 0);
+
+    void consume(int element_count);
 
     cl_mem *get_read_buffer(const int number_elements, opencl_arguments &ocl);
 
@@ -89,6 +91,11 @@ void Port<T, N>::put_elements(T *elements, int elements_count) {
 template<typename T, int N>
 T Port<T, N>::element_preview(int offset) {
     return connected_FIFOs.front().get().element_preview(offset);
+}
+
+template<typename T, int N>
+void Port<T, N>::consume(int elements_count ) {
+    return connected_FIFOs.front().get().consume(elements_count);
 }
 
 template<typename T, int N>

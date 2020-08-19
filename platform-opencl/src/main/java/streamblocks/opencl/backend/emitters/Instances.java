@@ -10,10 +10,12 @@ import se.lth.cs.tycho.attribute.GlobalNames;
 import se.lth.cs.tycho.attribute.Types;
 import se.lth.cs.tycho.ir.Annotation;
 import se.lth.cs.tycho.ir.Parameter;
+import se.lth.cs.tycho.ir.Port;
 import se.lth.cs.tycho.ir.decl.GlobalEntityDecl;
 import se.lth.cs.tycho.ir.decl.ParameterVarDecl;
 import se.lth.cs.tycho.ir.decl.VarDecl;
 import se.lth.cs.tycho.ir.entity.Entity;
+import se.lth.cs.tycho.ir.entity.PortDecl;
 import se.lth.cs.tycho.ir.entity.am.ActorMachine;
 import se.lth.cs.tycho.ir.entity.am.Condition;
 import se.lth.cs.tycho.ir.entity.am.PortCondition;
@@ -23,10 +25,13 @@ import se.lth.cs.tycho.ir.entity.am.Transition;
 import se.lth.cs.tycho.ir.expr.*;
 import se.lth.cs.tycho.ir.network.Instance;
 import se.lth.cs.tycho.type.CallableType;
+import se.lth.cs.tycho.type.ListType;
 import se.lth.cs.tycho.type.Type;
 import streamblocks.opencl.backend.OpenCLBackend;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Module
@@ -93,7 +98,6 @@ public interface Instances {
         // -- Includes
         defineIncludes(false);
 
-
         // -- Controller (aka Action selection)
         backend().controllers().emitController(instanceName, actorMachine);
         emitter().emitNewLine();
@@ -157,6 +161,7 @@ public interface Instances {
     default void defineIncludes(boolean isHeader) {
         if (isHeader) {
             backend().includeSystem("stdint.h");
+            backend().includeUser("Port.h");
             backend().includeUser("globals.h");
         } else {
             Instance instance = backend().instancebox().get();
@@ -176,6 +181,21 @@ public interface Instances {
         emitter().emit("private:");
         {
             emitter().increaseIndentation();
+
+            // -- Input Ports
+            if (!actor.getInputPorts().isEmpty()) {
+                emitter().emit("// -- Input Ports");
+            }
+            actor.getInputPorts().forEach(p -> emitter().emit("%s;", declarations().portDeclaration(p, "")));
+
+            // -- Output Ports
+            if (!actor.getOutputPorts().isEmpty()) {
+                emitter().emit("// -- Output Ports");
+            }
+            actor.getOutputPorts().forEach(p -> emitter().emit("%s;", declarations().portDeclaration(p, "")));
+            emitter().emitNewLine();
+
+
             for (Scope scope : actor.getScopes()) {
                 if (!scope.getDeclarations().isEmpty()) {
                     emitter().emit("// -- Scope %d", actor.getScopes().indexOf(scope));
@@ -249,10 +269,11 @@ public interface Instances {
         // -- External memories
 
         String className = "class_" + instanceName;
-        emitter().emit("%s() {", className);
+
+
+        emitter().emit("%s(%s) : %s {", className, entityPorts(actor, "_"), explicitPortInitialization(actor, "_"));
         {
             emitter().increaseIndentation();
-
 
             // -- Program counter
             emitter().emit("// -- Program counter");
@@ -340,7 +361,6 @@ public interface Instances {
 
         return String.format("void %stransition_%d()", withClassName ? className + "::" : "", index);
     }
-
 
     // ------------------------------------------------------------------------
     // -- Scopes
@@ -445,6 +465,41 @@ public interface Instances {
                 }
             }
         }
+    }
+
+    // ------------------------------------------------------------------------
+    // -- Entity ports
+
+    default String entityPorts(Entity entity, String prefix) {
+
+        List<String> ports = new ArrayList<>();
+
+        // -- Input Ports
+        for (PortDecl port : entity.getInputPorts()) {
+            ports.add(backend().declarations().portDeclaration(port, prefix));
+        }
+
+        // -- Output Ports
+        for (PortDecl port : entity.getOutputPorts()) {
+            ports.add(backend().declarations().portDeclaration(port, prefix));
+        }
+
+        return String.join(", ", ports);
+    }
+
+    default String explicitPortInitialization(Entity entity, String prefix) {
+        List<String> ports = new ArrayList<>();
+
+        // -- Input Ports
+        for (PortDecl port : entity.getInputPorts()) {
+            ports.add(String.format("%s$FIFO(%s%1$s$FIFO)", port.getName(), prefix));
+        }
+
+        // -- Output Ports
+        for (PortDecl port : entity.getOutputPorts()) {
+            ports.add(String.format("%s$FIFO(%s%1$s$FIFO)", port.getName(), prefix));
+        }
+        return String.join(", ", ports);
     }
 
 }

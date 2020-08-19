@@ -1,12 +1,12 @@
 # OpenCL Runtime sources
-set(art_runtime_sources
+set(runtime_sources
         src/opencl_arguments.cpp
         src/Translation.cpp
         src/utils.cpp
         )
 
 # OpenCL Runtime includes
-set(art_runtime_header
+set(runtime_header
         include/FIFO.h
         include/opencl_arguments.h
         include/Port.h
@@ -17,7 +17,7 @@ set(art_runtime_header
 include_directories(${extra_includes})
 add_definitions(${extra_definitions})
 
-add_library(cl-runtime STATIC ${art_runtime_sources} ${art_runtime_header})
+add_library(cl-runtime STATIC ${runtime_sources} ${runtime_header})
 
 target_link_libraries(cl-runtime ${extra_libraries})
 

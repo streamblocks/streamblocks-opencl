@@ -59,44 +59,37 @@ public interface Statements {
         return backend().declarations();
     }
 
-    default TypesEvaluator typeseval(){
+    default TypesEvaluator typeseval() {
         return backend().typeseval();
     }
 
-    default Types types(){
+    default Types types() {
         return backend().types();
     }
 
-    default Expressions expressions(){
+    default Expressions expressions() {
         return backend().expressions();
     }
-    
+
     void execute(Statement stmt);
 
     default void execute(StmtConsume consume) {
-        emitter().emit("channel_consume_%s(self->%s_channel, %d);", backend().channels().inputPortTypeSize(consume.getPort()), consume.getPort().getName(), consume.getNumberOfTokens());
+        emitter().emit("%s$FIFO.consume(%s);", consume.getPort().getName(), consume.getNumberOfTokens());
     }
 
     default void execute(StmtWrite write) {
         String portName = write.getPort().getName();
         if (write.getRepeatExpression() == null) {
-            String portType =  typeseval().type(types().portType(write.getPort()));
             String tmp = variables().generateTemp();
             emitter().emit("%s;", declarations().declaration(types().portType(write.getPort()), tmp));
             for (Expression expr : write.getValues()) {
                 emitter().emit("%s = %s;", tmp, expressions().evaluate(expr));
-                emitter().emit("channel_write_one_%s(self->%s_channels, %s);", backend().channels().outputPortTypeSize(write.getPort()), portName, tmp);
+                emitter().emit("%s$FIFO.put_element(%s);", portName, tmp);
             }
         } else if (write.getValues().size() == 1) {
-            String portType = typeseval().type(types().portType(write.getPort()));
             String value = expressions().evaluate(write.getValues().get(0));
             String repeat = expressions().evaluate(write.getRepeatExpression());
-            String temp = variables().generateTemp();
-            emitter().emit("for (size_t %1$s = 0; %1$s < %2$s; %1$s++) {", temp, repeat);
-            emitter().increaseIndentation();
-            emitter().emit("channel_write_one_%1$s(self->%2$s_channels, %3$s.data[%4$s]);", backend().channels().outputPortTypeSize(write.getPort()), portName, value, temp);
-            emitter().decreaseIndentation();
-            emitter().emit("}");
+            emitter().emit("%s$FIFO.put_elements(&%s, %s);", portName, value, repeat);
         } else {
             throw new Error("not implemented");
         }
@@ -222,7 +215,7 @@ public interface Statements {
     }
 
     default String lvalue(LValueDeref deref) {
-        return "(*"+lvalue(deref.getVariable())+")";
+        return "(*" + lvalue(deref.getVariable()) + ")";
     }
 
     default String lvalue(LValueIndexer indexer) {
@@ -230,6 +223,7 @@ public interface Statements {
     }
 
     String lvalueIndexing(Type type, LValueIndexer indexer);
+
     default String lvalueIndexing(ListType type, LValueIndexer indexer) {
         return String.format("%s.data[%s]", lvalue(indexer.getStructure()), expressions().evaluate(indexer.getIndex()));
     }
