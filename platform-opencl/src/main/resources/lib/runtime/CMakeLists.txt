@@ -12,7 +12,7 @@ set(art_runtime_header
         include/Port.h
         include/Translation.h
         include/utils.h
-        )
+        include/cl.h)
 
 include_directories(${extra_includes})
 add_definitions(${extra_definitions})

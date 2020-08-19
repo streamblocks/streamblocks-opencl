@@ -331,7 +331,7 @@ bool printClDevices() {
                           << std::endl;
                 return false;
             }
-            printf("Device Type:%s, ", TranslateDeviceType(type));
+            printf("Device Type:%s, ", TranslateDeviceType(type).c_str());
 
             cl_uint max_compute_units;
             errorCode = clGetDeviceInfo(devices[j], CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(cl_uint), &max_compute_units,

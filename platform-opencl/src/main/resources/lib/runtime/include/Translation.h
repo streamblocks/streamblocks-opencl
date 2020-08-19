@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include <CL/cl.hpp>
+#include "cl.h"
 
 std::string TranslateErrorCode(cl_int errorCode);
 

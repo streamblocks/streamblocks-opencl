@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include <CL/cl.hpp>
+#include "cl.h"
 
 #define OPENCL_VERSION_1_2  1.2f
 #define OPENCL_VERSION_2_0  2.0f

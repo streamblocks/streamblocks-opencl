@@ -150,10 +150,13 @@ std::string TranslateErrorCode(cl_int errorCode) {
             return "CL_INVALID_LINKER_OPTIONS";
         case CL_INVALID_DEVICE_PARTITION_COUNT:
             return "CL_INVALID_DEVICE_PARTITION_COUNT";
-        case CL_INVALID_PIPE_SIZE:
-            return "CL_INVALID_PIPE_SIZE";
-        case CL_INVALID_DEVICE_QUEUE:
-            return "CL_INVALID_DEVICE_QUEUE";
+#if defined(__APPLE__) || defined(__MACOSX)
+#else
+            case CL_INVALID_PIPE_SIZE:
+                return "CL_INVALID_PIPE_SIZE";
+            case CL_INVALID_DEVICE_QUEUE:
+                return "CL_INVALID_DEVICE_QUEUE";
+#endif
         default:
             return "UNKNOWN ERROR CODE";
     }
