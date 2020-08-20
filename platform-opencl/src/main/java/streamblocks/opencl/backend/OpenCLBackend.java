@@ -212,6 +212,7 @@ public interface OpenCLBackend {
     @Binding(LAZY)
     default Declarations declarations() {
         return MultiJ.from(Declarations.class)
+                .bind("backend").to(this)
                 .bind("types").to(types())
                 .bind("typeseval").to(typeseval())
                 .instance();

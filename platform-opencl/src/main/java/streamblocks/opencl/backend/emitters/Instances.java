@@ -175,7 +175,7 @@ public interface Instances {
     default void instanceClass(String instanceName, ActorMachine actor) {
         emitter().emit("// -- Instance Class");
 
-        emitter().emit("class class_%s {", instanceName);
+        emitter().emit("class c_%s {", instanceName);
 
         // -- Private
         emitter().emit("private:");
@@ -186,13 +186,13 @@ public interface Instances {
             if (!actor.getInputPorts().isEmpty()) {
                 emitter().emit("// -- Input Ports");
             }
-            actor.getInputPorts().forEach(p -> emitter().emit("%s;", declarations().portDeclaration(p, "")));
+            actor.getInputPorts().forEach(p -> emitter().emit("%s;", declarations().portInputDeclaration(instanceName, p, "")));
 
             // -- Output Ports
             if (!actor.getOutputPorts().isEmpty()) {
                 emitter().emit("// -- Output Ports");
             }
-            actor.getOutputPorts().forEach(p -> emitter().emit("%s;", declarations().portDeclaration(p, "")));
+            actor.getOutputPorts().forEach(p -> emitter().emit("%s;", declarations().portOutputDeclaration(instanceName, p, "")));
             emitter().emitNewLine();
 
 
@@ -268,7 +268,7 @@ public interface Instances {
     default void instanceConstructor(String instanceName, ActorMachine actor) {
         // -- External memories
 
-        String className = "class_" + instanceName;
+        String className = "c_" + instanceName;
 
 
         emitter().emit("%s(%s) : %s {", className, entityPorts(actor, "_"), explicitPortInitialization(actor, "_"));
@@ -343,21 +343,21 @@ public interface Instances {
 
     default String scopePrototype(String instanceName, Scope scope, int index, boolean withClassName) {
         // -- Actor Instance Name
-        String className = "class_" + instanceName;
+        String className = "c_" + instanceName;
 
         return String.format("void %sscope_%d()", withClassName ? className + "::" : "", index);
     }
 
     default String conditionPrototype(String instanceName, Condition condition, int index, boolean withClassName) {
         // -- Actor Instance Name
-        String className = "class_" + instanceName;
+        String className = "c_" + instanceName;
 
         return String.format("bool %scondition_%d()", withClassName ? className + "::" : "", index);
     }
 
     default String transitionPrototype(String instanceName, Transition transition, int index, boolean withClassName) {
         // -- Actor Instance Name
-        String className = "class_" + instanceName;
+        String className = "c_" + instanceName;
 
         return String.format("void %stransition_%d()", withClassName ? className + "::" : "", index);
     }
@@ -366,35 +366,38 @@ public interface Instances {
     // -- Scopes
 
     default void scope(String instanceName, Scope scope, int index) {
-        if (scope.getDeclarations().size() > 0 || scope.isPersistent()) {
-            if (index != 0) {
-                emitter().emit("%s{", scopePrototype(instanceName, scope, index, true));
-                {
-                    emitter().increaseIndentation();
+        if (scope.isPersistent()) {
+            if (scope.getDeclarations().size() > 0) {
+                if (index != 0) {
+                    emitter().emit("%s{", scopePrototype(instanceName, scope, index, true));
+                    {
+                        emitter().increaseIndentation();
 
-                    for (VarDecl var : scope.getDeclarations()) {
-                        Type type = types().declaredType(var);
-                        if (var.isExternal() && type instanceof CallableType) {
-                            // -- Do Nothing
-                        } else if (var.getValue() != null) {
-                            emitter().emit("{");
-                            emitter().increaseIndentation();
-                            if (var.getValue() instanceof ExprInput) {
-                                // TBD
-                                //backend().expressions().evaluateWithLvalue("this->" + backend().variables().declarationName(var), (ExprInput) var.getValue());
-                            } else {
-                                backend().statements().copy(types().declaredType(var), "this->" + backend().variables().declarationName(var), types().type(var.getValue()), backend().expressions().evaluate(var.getValue()));
+                        for (VarDecl var : scope.getDeclarations()) {
+                            Type type = types().declaredType(var);
+                            if (var.isExternal() && type instanceof CallableType) {
+                                // -- Do Nothing
+                            } else if (var.getValue() != null) {
+                                emitter().emit("{");
+                                emitter().increaseIndentation();
+                                if (var.getValue() instanceof ExprInput) {
+                                    // TBD
+                                    //backend().expressions().evaluateWithLvalue("this->" + backend().variables().declarationName(var), (ExprInput) var.getValue());
+                                } else {
+                                    backend().statements().copy(types().declaredType(var), "this->" + backend().variables().declarationName(var), types().type(var.getValue()), backend().expressions().evaluate(var.getValue()));
+                                }
+                                emitter().decreaseIndentation();
+                                emitter().emit("}");
                             }
-                            emitter().decreaseIndentation();
-                            emitter().emit("}");
                         }
+                        emitter().decreaseIndentation();
                     }
-                    emitter().decreaseIndentation();
+                    emitter().emit("}");
+                    emitter().emitNewLine();
                 }
-                emitter().emit("}");
-                emitter().emitNewLine();
             }
         }
+
     }
 
     // ------------------------------------------------------------------------
@@ -476,12 +479,12 @@ public interface Instances {
 
         // -- Input Ports
         for (PortDecl port : entity.getInputPorts()) {
-            ports.add(backend().declarations().portDeclaration(port, prefix));
+            ports.add(backend().declarations().portInputDeclaration(backend().instancebox().get().getInstanceName(), port, prefix));
         }
 
         // -- Output Ports
         for (PortDecl port : entity.getOutputPorts()) {
-            ports.add(backend().declarations().portDeclaration(port, prefix));
+            ports.add(backend().declarations().portOutputDeclaration(backend().instancebox().get().getInstanceName(), port, prefix));
         }
 
         return String.join(", ", ports);

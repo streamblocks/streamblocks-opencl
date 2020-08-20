@@ -5,23 +5,31 @@ import org.multij.BindingKind;
 import org.multij.Module;
 import se.lth.cs.tycho.attribute.Types;
 import se.lth.cs.tycho.ir.entity.PortDecl;
+import se.lth.cs.tycho.ir.network.Connection;
 import se.lth.cs.tycho.type.BoolType;
 import se.lth.cs.tycho.type.ListType;
 import se.lth.cs.tycho.type.RefType;
 import se.lth.cs.tycho.type.StringType;
 import se.lth.cs.tycho.type.Type;
 import se.lth.cs.tycho.type.UnitType;
+import streamblocks.opencl.backend.OpenCLBackend;
 
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Module
 public interface Declarations {
 
     @Binding(BindingKind.INJECTED)
+    OpenCLBackend backend();
+
+    @Binding(BindingKind.INJECTED)
     Types types();
 
     @Binding(BindingKind.INJECTED)
     TypesEvaluator typeseval();
+
+
 
     default String declaration(Type type, String name) {
         return typeseval().type(type) + " " + name;
@@ -65,8 +73,19 @@ public interface Declarations {
     }
 
 
-    default String portDeclaration(PortDecl portDecl, String prefix) {
+    default String portInputDeclaration(String instanceName, PortDecl portDecl, String prefix) {
+        Connection.End target = new Connection.End(Optional.of(instanceName), portDecl.getName());
+        int size = backend().channels().targetEndSize(target);
         Type type = types().declaredPortType(portDecl);
-        return String.format("Port< %s, %d > &%s$FIFO", declaration(type, ""), 4096, prefix + portDecl.getName());
+        return String.format("Port< %s, %d > &%s$FIFO", declaration(type, ""), size, prefix + portDecl.getName());
     }
+
+    default String portOutputDeclaration(String instanceName, PortDecl portDecl, String prefix) {
+        Connection.End source = new Connection.End(Optional.of(instanceName), portDecl.getName());
+        int size = backend().channels().sourceEndSize(source);
+        Type type = types().declaredPortType(portDecl);
+        return String.format("Port< %s, %d > &%s$FIFO", declaration(type, ""), size, prefix + portDecl.getName());
+    }
+
+
 }
