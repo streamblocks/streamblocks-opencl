@@ -280,7 +280,7 @@ public interface Statements {
 
     default String passByValue(String param, StringType type) {
         String tmp = variables().generateTemp();
-        emitter().emit("%s = %s;", declarations().declaration(type, tmp), backend().defaultValues().defaultValue(type));
+        emitter().emit("%s;", declarations().declaration(type, tmp));
         copy(type, tmp, type, param);
         return tmp;
     }
@@ -380,7 +380,7 @@ public interface Statements {
     }
 
     default void copy(StringType lvalueType, String lvalue, StringType rvalueType, String rvalue) {
-        emitter().emit("copy_%1$s(&(%2$s), %3$s);", backend().typeseval().type(lvalueType), lvalue, rvalue);
+        emitter().emit("%1$s = %2$s;", lvalue, rvalue);
     }
 
     default void copy(AlgebraicType lvalueType, String lvalue, AlgebraicType rvalueType, String rvalue) {

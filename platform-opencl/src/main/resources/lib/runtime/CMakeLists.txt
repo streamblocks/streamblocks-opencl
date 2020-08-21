@@ -7,9 +7,12 @@ set(runtime_sources
 
 # OpenCL Runtime includes
 set(runtime_header
+        include/Actor.h
+        include/prelude.h
+        include/Scheduling.h
         include/FIFO.h
-        include/opencl_arguments.h
         include/Port.h
+        include/opencl_arguments.h
         include/Translation.h
         include/utils.h
         include/cl.h)

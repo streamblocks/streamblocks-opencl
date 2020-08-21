@@ -15,7 +15,6 @@ import se.lth.cs.tycho.ir.network.Network;
 import streamblocks.opencl.backend.OpenCLBackend;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -39,18 +38,6 @@ public interface Main {
         // -- Includes
         defineIncludes(network);
 
-        // -- FIFOs
-        defineFIFOs(network);
-
-        // -- Ports
-        definePorts(network);
-
-        // -- Instantiation
-        defineInstancesDeclaration(network);
-
-        // -- Atomic flag of instances
-        defineInstanceAtomicRunning(network);
-
         // -- Main
         defineMain(network);
 
@@ -62,6 +49,7 @@ public interface Main {
         backend().includeSystem("stdint.h");
         backend().includeSystem("atomic");
         backend().includeSystem("future");
+        backend().includeUser("Scheduling.h");
         emitter().emitNewLine();
 
         emitter().emit("// -- Instance headers");
@@ -116,12 +104,28 @@ public interface Main {
     }
 
     default void defineInstancesDeclaration(Network network) {
-        emitter().emit("// -- Network instance declaration");
+        emitter().emit("// -- Instance instantiation");
         for (Instance instance : network.getInstances()) {
-            emitter().emit("c_%s *i_%1$s;", instance.getInstanceName());
+            GlobalEntityDecl entityDecl = backend().globalnames().entityDecl(instance.getEntityName(), true);
+            Entity entity = entityDecl.getEntity();
+
+            List<String> io = entity.getInputPorts().stream().map(p -> String.format("%s_%s$FIFO", instance.getInstanceName(), p.getName())).collect(Collectors.toList());
+            io.addAll(entity.getOutputPorts().stream().map(p -> String.format("%s_%s$FIFO", instance.getInstanceName(), p.getName())).collect(Collectors.toList()));
+
+            emitter().emit("auto i_%s = std::make_shared<c_%1$s>(%s);", instance.getInstanceName(), String.join(", ", io));
         }
         emitter().emitNewLine();
     }
+
+    default void vectorOfUniqueInstances(Network network) {
+        emitter().emit("// -- Vector of Instances");
+        emitter().emit("std::vector<std::shared_ptr<Actor>> instances;");
+        for (Instance instance : network.getInstances()) {
+            emitter().emit("instances.push_back(i_%s);", instance.getInstanceName());
+        }
+        emitter().emitNewLine();
+    }
+
 
     default void defineInstanceAtomicRunning(Network network) {
         emitter().emit("// -- Instances atomic flags");
@@ -136,16 +140,21 @@ public interface Main {
         emitter().emit("int main(int argc, char *argv[]) {");
         {
             emitter().increaseIndentation();
-            emitter().emit("// -- Instance instantiation");
-            for (Instance instance : network.getInstances()) {
-                GlobalEntityDecl entityDecl = backend().globalnames().entityDecl(instance.getEntityName(), true);
-                Entity entity = entityDecl.getEntity();
 
-                List<String> io = entity.getInputPorts().stream().map(p -> String.format("%s_%s$FIFO", instance.getInstanceName(), p.getName())).collect(Collectors.toList());
-                io.addAll(entity.getOutputPorts().stream().map(p -> String.format("%s_%s$FIFO", instance.getInstanceName(), p.getName())).collect(Collectors.toList()));
+            // -- FIFOs
+            defineFIFOs(network);
 
-                emitter().emit("i_%s = new c_%1$s{%s};", instance.getInstanceName(), String.join(", ", io));
-            }
+            // -- Ports
+            definePorts(network);
+
+            // -- Instantiation
+            defineInstancesDeclaration(network);
+
+            // -- Vector of unique instances
+            vectorOfUniqueInstances(network);
+
+            emitter().emit("// -- RR Scheduling ");
+            emitter().emit("scheduling::RR(instances);");
             emitter().emitNewLine();
 
             emitter().emit("return 0;");

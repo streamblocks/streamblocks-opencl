@@ -110,7 +110,7 @@ public interface Expressions {
                 return literal.getText();
             case String: {
                 String tmp = variables().generateTemp();
-                emitter().emit("%s = init_%s(%s);", declarations().declaration(StringType.INSTANCE, tmp), typeseval().type(StringType.INSTANCE), literal.getText());
+                emitter().emit("%s = %s;", declarations().declaration(StringType.INSTANCE, tmp), literal.getText());
                 return tmp;
             }
             case Char:
@@ -219,7 +219,7 @@ public interface Expressions {
         Expression left = binaryOp.getOperands().get(0);
         Expression right = binaryOp.getOperands().get(1);
         emitter().emit("%s;", backend().declarations().declaration(lhs, tmp));
-        emitter().emit("%1$s = concat_%2$s_%2$s(%3$s, %4$s);", tmp, backend().typeseval().type(lhs), evaluate(left), evaluate(right));
+        emitter().emit("%1$s = %2$s + %3$s;", tmp, evaluate(left), evaluate(right));
         return tmp;
     }
 
@@ -228,7 +228,7 @@ public interface Expressions {
         Expression left = binaryOp.getOperands().get(0);
         Expression right = binaryOp.getOperands().get(1);
         emitter().emit("%s;", backend().declarations().declaration(rhs, tmp));
-        emitter().emit("%1$s = concat_%2$s_%3$s(%4$s, %5$s);", tmp, backend().typeseval().type(lhs), backend().typeseval().type(rhs), evaluate(left), evaluate(right));
+        emitter().emit("%1$s = std::to_string(%2$s), %3$s;", tmp, evaluate(left), evaluate(right));
         return tmp;
     }
 
@@ -237,7 +237,7 @@ public interface Expressions {
         Expression left = binaryOp.getOperands().get(0);
         Expression right = binaryOp.getOperands().get(1);
         emitter().emit("%s;", backend().declarations().declaration(lhs, tmp));
-        emitter().emit("%1$s = concat_%2$s_%3$s(%4$s, %5$s);", tmp, backend().typeseval().type(lhs), backend().typeseval().type(rhs), evaluate(left), evaluate(right));
+        emitter().emit("%1$s = %2$s + std::to_string(%2$s);", tmp, evaluate(left), evaluate(right));
         return tmp;
     }
 
@@ -265,7 +265,7 @@ public interface Expressions {
         Expression left = binaryOp.getOperands().get(0);
         Expression right = binaryOp.getOperands().get(1);
         emitter().emit("%s;", backend().declarations().declaration(rhs, tmp));
-        emitter().emit("%1$s = concat_%2$s_%3$s(%4$s, %5$s);", tmp, backend().typeseval().type(type), backend().typeseval().type(rhs), evaluate(left), evaluate(right));
+        emitter().emit("%1$s = std::to_string(%2$s) + %3$s;", tmp, evaluate(left), evaluate(right));
         return tmp;
     }
 
@@ -275,7 +275,7 @@ public interface Expressions {
         Expression left = binaryOp.getOperands().get(0);
         Expression right = binaryOp.getOperands().get(1);
         emitter().emit("%s;", backend().declarations().declaration(lhs, tmp));
-        emitter().emit("%1$s = concat_%2$s_%3$s(%4$s, %5$s);", tmp, backend().typeseval().type(lhs), backend().typeseval().type(type), evaluate(left), evaluate(right));
+        emitter().emit("%1$s = %2$s + std::to_string(%3$s);", tmp, evaluate(left), evaluate(right));
         return tmp;
     }
 

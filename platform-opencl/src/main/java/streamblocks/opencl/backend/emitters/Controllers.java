@@ -40,7 +40,7 @@ public interface Controllers {
         Map<State, Integer> stateMap = stateMap(stateList);
         Set<State> waitTargets = collectWaitTargets(stateList);
 
-        emitter().emit("bool class_%s::schedule() {", name);
+        emitter().emit("bool c_%s::schedule() {", name);
         emitter().increaseIndentation();
 
         emitter().emit("bool progress = false;");

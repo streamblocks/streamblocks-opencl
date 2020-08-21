@@ -162,7 +162,9 @@ public interface Instances {
         if (isHeader) {
             backend().includeSystem("stdint.h");
             backend().includeUser("Port.h");
+            backend().includeUser("Actor.h");
             backend().includeUser("globals.h");
+            backend().includeUser("prelude.h");
         } else {
             Instance instance = backend().instancebox().get();
             String headerName = instance.getInstanceName() + ".h";
@@ -175,7 +177,7 @@ public interface Instances {
     default void instanceClass(String instanceName, ActorMachine actor) {
         emitter().emit("// -- Instance Class");
 
-        emitter().emit("class c_%s {", instanceName);
+        emitter().emit("class c_%s: public Actor {", instanceName);
 
         // -- Private
         emitter().emit("private:");
