@@ -184,8 +184,7 @@ public interface Statements {
             parameters.add("NULL");
         } else {
             String name = expressions().evaluate(call.getProcedure());
-            proc = name + ".f";
-            parameters.add(name + ".env");
+            proc = name;
         }
         for (Expression parameter : call.getArgs()) {
             String param = expressions().evaluate(parameter);
