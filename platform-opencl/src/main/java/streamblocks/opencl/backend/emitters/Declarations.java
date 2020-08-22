@@ -15,7 +15,6 @@ import se.lth.cs.tycho.type.UnitType;
 import streamblocks.opencl.backend.OpenCLBackend;
 
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Module
 public interface Declarations {
@@ -28,7 +27,6 @@ public interface Declarations {
 
     @Binding(BindingKind.INJECTED)
     TypesEvaluator typeseval();
-
 
 
     default String declaration(Type type, String name) {
@@ -55,6 +53,9 @@ public interface Declarations {
         return declaration(type, name);
     }
 
+    default String declaration(ListType type, String name) {
+        return String.format("%s %s", backend().typeseval().type(type), name);
+    }
 
     /*
      * Declaration for parameters

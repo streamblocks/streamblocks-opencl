@@ -6,6 +6,7 @@ import org.multij.BindingKind;
 import org.multij.Module;
 import se.lth.cs.tycho.ir.IRNode;
 import se.lth.cs.tycho.ir.Variable;
+import se.lth.cs.tycho.ir.decl.GlobalVarDecl;
 import se.lth.cs.tycho.ir.decl.ParameterVarDecl;
 import se.lth.cs.tycho.ir.decl.VarDecl;
 import se.lth.cs.tycho.ir.entity.Entity;
@@ -278,6 +279,56 @@ public interface Callables {
 
     // function definition (matching function prototype)
     // with environment typedef
+
+    default void callableDefinitionClass(String name, IRNode callable) {}
+
+    default void callableDefinitionClass(String name, ExprLambda lambda) {
+        backend().emitter().emit("%s {", classLambdaHeader(name, lambda));
+        backend().emitter().increaseIndentation();
+        lambda.forEachChild(this::declareEnvironmentForCallablesInScope);
+        backend().emitter().emit("return %s;", backend().expressions().evaluate(lambda.getBody()));
+        backend().emitter().decreaseIndentation();
+        backend().emitter().emit("}");
+    }
+
+    default void callableDefinitionClass(String name, ExprProc proc) {
+        backend().emitter().emit("%s {", classProcHeader(name, proc));
+        backend().emitter().increaseIndentation();
+        proc.getBody().forEach(backend().statements()::execute);
+        backend().emitter().decreaseIndentation();
+        backend().emitter().emit("}");
+    }
+
+    default String classProcHeader(String className, ExprProc proc) {
+        String name = functionName(proc);
+        IRNode parent = backend().tree().parent(proc);
+        boolean isGlobal = parent instanceof GlobalVarDecl;
+        if(!isGlobal){
+            name = className + "::" + name;
+        }
+        ProcType type = (ProcType) backend().types().type(proc);
+        ImmutableList<String> parameterNames = proc.getValueParameters().map(backend().variables()::declarationName);
+        return callableHeader(name, type, parameterNames, isGlobal);
+    }
+
+
+    default String classLambdaHeader(String className, ExprLambda lambda) {
+        String name = functionName(lambda);
+
+        IRNode parent = backend().tree().parent(lambda);
+        boolean isGlobal = parent instanceof GlobalVarDecl;
+        if(!isGlobal){
+            name = className + "::" + name;
+        }
+        LambdaType type = (LambdaType) backend().types().type(lambda);
+        ImmutableList<String> parameterNames = lambda.getValueParameters().map(backend().variables()::declarationName);
+        return callableHeader(name, type, parameterNames, isGlobal);
+    }
+
+
+
+
+
     default void callableDefinition(IRNode callable) {
     }
 

@@ -10,7 +10,6 @@ import se.lth.cs.tycho.attribute.GlobalNames;
 import se.lth.cs.tycho.attribute.Types;
 import se.lth.cs.tycho.ir.Annotation;
 import se.lth.cs.tycho.ir.Parameter;
-import se.lth.cs.tycho.ir.Port;
 import se.lth.cs.tycho.ir.decl.GlobalEntityDecl;
 import se.lth.cs.tycho.ir.decl.ParameterVarDecl;
 import se.lth.cs.tycho.ir.decl.VarDecl;
@@ -22,10 +21,15 @@ import se.lth.cs.tycho.ir.entity.am.PortCondition;
 import se.lth.cs.tycho.ir.entity.am.PredicateCondition;
 import se.lth.cs.tycho.ir.entity.am.Scope;
 import se.lth.cs.tycho.ir.entity.am.Transition;
-import se.lth.cs.tycho.ir.expr.*;
+import se.lth.cs.tycho.ir.expr.ExprComprehension;
+import se.lth.cs.tycho.ir.expr.ExprInput;
+import se.lth.cs.tycho.ir.expr.ExprLambda;
+import se.lth.cs.tycho.ir.expr.ExprList;
+import se.lth.cs.tycho.ir.expr.ExprLiteral;
+import se.lth.cs.tycho.ir.expr.ExprProc;
+import se.lth.cs.tycho.ir.expr.Expression;
 import se.lth.cs.tycho.ir.network.Instance;
 import se.lth.cs.tycho.type.CallableType;
-import se.lth.cs.tycho.type.ListType;
 import se.lth.cs.tycho.type.Type;
 import streamblocks.opencl.backend.OpenCLBackend;
 
@@ -368,37 +372,34 @@ public interface Instances {
     // -- Scopes
 
     default void scope(String instanceName, Scope scope, int index) {
-        if (scope.isPersistent()) {
-            if (scope.getDeclarations().size() > 0) {
-                if (index != 0) {
-                    emitter().emit("%s{", scopePrototype(instanceName, scope, index, true));
-                    {
-                        emitter().increaseIndentation();
+        // if (scope.isPersistent()) {
+        if (scope.getDeclarations().size() > 0) {
+            if (index != 0) {
+                emitter().emit("%s{", scopePrototype(instanceName, scope, index, true));
+                {
+                    emitter().increaseIndentation();
 
-                        for (VarDecl var : scope.getDeclarations()) {
-                            Type type = types().declaredType(var);
-                            if (var.isExternal() && type instanceof CallableType) {
-                                // -- Do Nothing
-                            } else if (var.getValue() != null) {
-                                emitter().emit("{");
-                                emitter().increaseIndentation();
-                                if (var.getValue() instanceof ExprInput) {
-                                    // TBD
-                                    //backend().expressions().evaluateWithLvalue("this->" + backend().variables().declarationName(var), (ExprInput) var.getValue());
-                                } else {
-                                    backend().statements().copy(types().declaredType(var), "this->" + backend().variables().declarationName(var), types().type(var.getValue()), backend().expressions().evaluate(var.getValue()));
-                                }
-                                emitter().decreaseIndentation();
-                                emitter().emit("}");
-                            }
+                    for (VarDecl var : scope.getDeclarations()) {
+                        Type type = types().declaredType(var);
+                        if (var.isExternal() && type instanceof CallableType) {
+                            // -- Do Nothing
+                        } else if (var.getValue() != null) {
+                            emitter().emit("{");
+                            emitter().increaseIndentation();
+
+                            backend().statements().copy(types().declaredType(var), "this->" + backend().variables().declarationName(var), types().type(var.getValue()), backend().expressions().evaluate(var.getValue()));
+
+                            emitter().decreaseIndentation();
+                            emitter().emit("}");
                         }
-                        emitter().decreaseIndentation();
                     }
-                    emitter().emit("}");
-                    emitter().emitNewLine();
+                    emitter().decreaseIndentation();
                 }
+                emitter().emit("}");
+                emitter().emitNewLine();
             }
         }
+        // }
 
     }
 

@@ -8,7 +8,6 @@ import se.lth.cs.tycho.attribute.VariableDeclarations;
 import se.lth.cs.tycho.compiler.UniqueNumbers;
 import se.lth.cs.tycho.ir.IRNode;
 import se.lth.cs.tycho.ir.NamespaceDecl;
-import se.lth.cs.tycho.ir.QID;
 import se.lth.cs.tycho.ir.Variable;
 import se.lth.cs.tycho.ir.decl.VarDecl;
 import se.lth.cs.tycho.ir.entity.am.ActorMachine;
@@ -18,7 +17,6 @@ import se.lth.cs.tycho.ir.expr.ExprGlobalVariable;
 import se.lth.cs.tycho.phase.TreeShadow;
 
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Module
 public interface Variables {
@@ -71,10 +69,7 @@ public interface Variables {
         } else if (parent instanceof CalActor) {
             return "a_" + escape(decl.getName());
         } else if (parent instanceof NamespaceDecl) {
-            QID ns = ((NamespaceDecl) parent).getQID();
-            return Stream.concat(ns.parts().stream(), Stream.of(decl.getName()))
-                    .map(this::escape)
-                    .collect(Collectors.joining("_", "g_", ""));
+            return escape(decl.getName());
         } else {
             return "l_" + escape(decl.getName());
         }

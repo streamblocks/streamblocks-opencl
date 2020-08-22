@@ -89,7 +89,7 @@ public interface Statements {
         } else if (write.getValues().size() == 1) {
             String value = expressions().evaluate(write.getValues().get(0));
             String repeat = expressions().evaluate(write.getRepeatExpression());
-            emitter().emit("%s$FIFO.put_elements(&%s, %s);", portName, value, repeat);
+            emitter().emit("%s$FIFO.put_elements(%s.data(), %s);", portName, value, repeat);
         } else {
             throw new Error("not implemented");
         }
@@ -224,7 +224,7 @@ public interface Statements {
     String lvalueIndexing(Type type, LValueIndexer indexer);
 
     default String lvalueIndexing(ListType type, LValueIndexer indexer) {
-        return String.format("%s.data[%s]", lvalue(indexer.getStructure()), expressions().evaluate(indexer.getIndex()));
+        return String.format("%s[%s]", lvalue(indexer.getStructure()), expressions().evaluate(indexer.getIndex()));
     }
 
     default String lvalueIndexing(MapType type, LValueIndexer indexer) {
@@ -364,7 +364,7 @@ public interface Statements {
             String index = variables().generateTemp();
             emitter().emit("for (size_t %1$s = 0; %1$s < %2$s; %1$s++) {", index, lvalueType.getSize().getAsInt());
             emitter().increaseIndentation();
-            copy(lvalueType.getElementType(), String.format("%s.data[%s]", lvalue, index), rvalueType.getElementType(), String.format("%s.data[%s]", rvalue, index));
+            copy(lvalueType.getElementType(), String.format("%s[%s]", lvalue, index), rvalueType.getElementType(), String.format("%s[%s]", rvalue, index));
             emitter().decreaseIndentation();
             emitter().emit("}");
         }
@@ -404,7 +404,7 @@ public interface Statements {
         emitter().emit("%s = true;", declarations().declaration(BoolType.INSTANCE, tmp));
         emitter().emit("for (size_t %1$s = 0; (%1$s < %2$s) && %3$s; %1$s++) {", index, lvalueType.getSize().getAsInt(), tmp);
         emitter().increaseIndentation();
-        emitter().emit("%s &= %s;", tmp, compare(lvalueType.getElementType(), String.format("%s.data[%s]", lvalue, index), rvalueType.getElementType(), String.format("%s.data[%s]", rvalue, index)));
+        emitter().emit("%s &= %s;", tmp, compare(lvalueType.getElementType(), String.format("%s[%s]", lvalue, index), rvalueType.getElementType(), String.format("%s[%s]", rvalue, index)));
         emitter().decreaseIndentation();
         emitter().emit("}");
         return tmp;

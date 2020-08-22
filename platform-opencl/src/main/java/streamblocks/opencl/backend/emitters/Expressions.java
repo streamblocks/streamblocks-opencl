@@ -109,9 +109,7 @@ public interface Expressions {
             case Real:
                 return literal.getText();
             case String: {
-                String tmp = variables().generateTemp();
-                emitter().emit("%s = %s;", declarations().declaration(StringType.INSTANCE, tmp), literal.getText());
-                return tmp;
+                return literal.getText();
             }
             case Char:
                 return literal.getText();
@@ -126,7 +124,7 @@ public interface Expressions {
         emitter().emit("%s = %s;", backend().declarations().declaration(type, tmp), backend().defaultValues().defaultValue(type));
         if (input.hasRepeat()) {
             if (input.getOffset() == 0) {
-                emitter().emit("channel_peek_%s(self->%s_channel, 0, %d, %s.data);", backend().channels().inputPortTypeSize(input.getPort()), input.getPort().getName(), input.getRepeat(), tmp);
+                emitter().emit("%s$FIFO.elements_preview(%s.data(), %d);", input.getPort().getName(), tmp, input.getRepeat());
             } else {
                 throw new RuntimeException("not implemented");
             }
@@ -733,7 +731,7 @@ public interface Expressions {
 
     default void evaluateListComprehension(ExprList list, String result, String index) {
         list.getElements().forEach(element ->
-                emitter().emit("%s.data[%s++] = %s;", result, index, evaluate(element))
+                emitter().emit("%s[%s++] = %s;", result, index, evaluate(element))
         );
     }
 
@@ -780,7 +778,7 @@ public interface Expressions {
                         }
                         return evaluate(element);
                     })
-                    .collect(Collectors.joining(", ", "{ .data = {", "}}"));
+                    .collect(Collectors.joining(", ", " {", "}"));
             emitter().emit("%s = %s;", decl, value);
             return name;
         } else {
@@ -845,7 +843,7 @@ public interface Expressions {
     String exprIndexing(Type type, ExprIndexer indexer);
 
     default String exprIndexing(ListType type, ExprIndexer indexer) {
-        return String.format("%s.data[%s]", evaluate(indexer.getStructure()), evaluate(indexer.getIndex()));
+        return String.format("%s[%s]", evaluate(indexer.getStructure()), evaluate(indexer.getIndex()));
     }
 
     default String exprIndexing(MapType type, ExprIndexer indexer) {

@@ -35,6 +35,8 @@ public:
 
     T element_preview(int offset = 0);
 
+    void elements_preview(T *elements, int elements_count);
+
     void consume(int element_count);
 
     cl_mem *get_read_buffer(const int number_elements, opencl_arguments &ocl);
@@ -91,6 +93,11 @@ void Port<T, N>::put_elements(T *elements, int elements_count) {
 template<typename T, int N>
 T Port<T, N>::element_preview(int offset) {
     return connected_FIFOs.front().get().element_preview(offset);
+}
+
+template<typename T, int N>
+void Port<T, N>::elements_preview(T *elements, int elements_count) {
+    connected_FIFOs.front().get().elements_preview(elements, elements_count);
 }
 
 template<typename T, int N>

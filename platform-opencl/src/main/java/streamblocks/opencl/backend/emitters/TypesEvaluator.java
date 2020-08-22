@@ -76,10 +76,11 @@ public interface TypesEvaluator {
     }
 
     default String type(ListType type) {
-
-        Type innerType = innerType(type.getElementType());
-
-        return type(innerType);
+        if (type.getSize().isPresent()) {
+            return String.format("std::array< %s, %d >", type(type.getElementType()), type.getSize().getAsInt());
+        } else {
+            return String.format("std::vector< %s >", type(type.getElementType()));
+        }
     }
 
     /**

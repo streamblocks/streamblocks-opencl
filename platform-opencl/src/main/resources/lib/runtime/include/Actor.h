@@ -2,6 +2,7 @@
 #define __ACTOR_H__
 
 #include <atomic>
+#include <array>
 
 class Actor {
 
