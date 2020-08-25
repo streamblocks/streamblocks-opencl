@@ -31,13 +31,6 @@ public interface Globals {
         return backend().emitter();
     }
 
-    default void generateSource() {
-        Path mainTarget = PathUtils.getTargetCodeGenSource(backend().context()).resolve("globals.cpp");
-        emitter().open(mainTarget);
-
-        emitter().close();
-    }
-
     default void generateHeader() {
         Path mainTarget = PathUtils.getTargetCodeGenInclude(backend().context()).resolve("globals.h");
         emitter().open(mainTarget);
@@ -103,12 +96,10 @@ public interface Globals {
 
     default void globalVariableDeclarations(Stream<VarDecl> varDecls) {
         varDecls.forEach(decl -> {
-            if(decl.isExternal()){
-                backend().callables().externalCallableDeclaration(decl);
-            }else{
+            if (!decl.isExternal()) {
                 Type type = backend().types().declaredType(decl);
                 if (type instanceof CallableType) {
-                    backend().callables().callableDefinitionClass("", decl.getValue());
+                    backend().callables().callableDefinition("", decl.getValue());
                     //emitter().emitNewLine();
                 } else {
                     String d = backend().declarations().declaration(type, backend().variables().declarationName(decl));
@@ -123,8 +114,6 @@ public interface Globals {
             }
         });
     }
-
-
 
 
 }

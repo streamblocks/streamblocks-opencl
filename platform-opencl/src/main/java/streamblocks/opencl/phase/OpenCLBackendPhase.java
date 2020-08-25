@@ -160,8 +160,6 @@ public class OpenCLBackendPhase implements Phase {
     }
 
     private void generateGlobals(OpenCLBackend backend){
-        backend.globals().generateSource();
-
         backend.globals().generateHeader();
     }
 

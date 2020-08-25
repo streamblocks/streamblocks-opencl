@@ -42,16 +42,6 @@ public interface Variables {
         return "t_" + uniqueNumbers().next();
     }
 
-    /**
-     * Escape in variables names
-     *
-     * @param name
-     * @return
-     */
-
-    default String escape(String name) {
-        return name.replace("_", "__");
-    }
 
     /**
      * Variables in declarations
@@ -62,16 +52,10 @@ public interface Variables {
 
     default String declarationName(VarDecl decl) {
         IRNode parent = tree().parent(decl);
-        if (parent instanceof Scope) {
-            return "a_" + escape(decl.getName());
-        } else if (parent instanceof ActorMachine) {
-            return "a_" + escape(decl.getName());
-        } else if (parent instanceof CalActor) {
-            return "a_" + escape(decl.getName());
-        } else if (parent instanceof NamespaceDecl) {
-            return escape(decl.getName());
+        if (parent instanceof NamespaceDecl || parent instanceof ActorMachine || parent instanceof Scope) {
+            return decl.getName();
         } else {
-            return "l_" + escape(decl.getName());
+            return "l_" + decl.getName();
         }
     }
 
@@ -84,7 +68,6 @@ public interface Variables {
 
     default String globalName(ExprGlobalVariable var) {
         return var.getGlobalName().parts().stream()
-                .map(this::escape)
                 .collect(Collectors.joining("::", "", ""));
     }
 

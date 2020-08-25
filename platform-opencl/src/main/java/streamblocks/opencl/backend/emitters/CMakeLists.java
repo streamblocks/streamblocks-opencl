@@ -88,7 +88,6 @@ public interface CMakeLists {
         }
 
         // -- Add main
-        emitter().emit("src/globals.cpp");
         emitter().emit("src/main.cpp");
 
         emitter().decreaseIndentation();

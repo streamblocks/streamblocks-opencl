@@ -39,7 +39,6 @@ import streamblocks.opencl.backend.OpenCLBackend;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 @Module
 public interface Statements {
@@ -104,7 +103,8 @@ public interface Statements {
     default void execute(StmtBlock block) {
         emitter().emit("{");
         emitter().increaseIndentation();
-        backend().callables().declareEnvironmentForCallablesInScope(block);
+
+        //backend().callables().declareEnvironmentForCallablesInScope(block);
         for (VarDecl decl : block.getVarDecls()) {
             Type t = types().declaredType(decl);
             String declarationName = variables().declarationName(decl);
@@ -176,16 +176,10 @@ public interface Statements {
 
 
     default void execute(StmtCall call) {
-        Optional<String> directlyCallable = backend().callables().directlyCallableName(call.getProcedure());
-        String proc;
         List<String> parameters = new ArrayList<>();
-        if (directlyCallable.isPresent()) {
-            proc = directlyCallable.get();
-            parameters.add("NULL");
-        } else {
-            String name = expressions().evaluate(call.getProcedure());
-            proc = name;
-        }
+
+        String name = expressions().evaluate(call.getProcedure());
+        String proc = name;
         for (Expression parameter : call.getArgs()) {
             String param = expressions().evaluate(parameter);
             Type type = types().type(parameter);
@@ -214,7 +208,7 @@ public interface Statements {
     }
 
     default String lvalue(LValueDeref deref) {
-        return "(*" + lvalue(deref.getVariable()) + ")";
+        return lvalue(deref.getVariable());
     }
 
     default String lvalue(LValueIndexer indexer) {

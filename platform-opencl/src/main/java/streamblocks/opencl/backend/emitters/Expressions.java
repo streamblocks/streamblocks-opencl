@@ -5,6 +5,7 @@ import org.multij.Binding;
 import org.multij.BindingKind;
 import org.multij.Module;
 import se.lth.cs.tycho.attribute.Types;
+import se.lth.cs.tycho.ir.IRNode;
 import se.lth.cs.tycho.ir.decl.GeneratorVarDecl;
 import se.lth.cs.tycho.ir.decl.VarDecl;
 import se.lth.cs.tycho.ir.expr.ExprApplication;
@@ -32,6 +33,7 @@ import se.lth.cs.tycho.ir.expr.ExprTypeConstruction;
 import se.lth.cs.tycho.ir.expr.ExprUnaryOp;
 import se.lth.cs.tycho.ir.expr.ExprVariable;
 import se.lth.cs.tycho.ir.expr.Expression;
+import se.lth.cs.tycho.ir.stmt.StmtCall;
 import se.lth.cs.tycho.ir.util.ImmutableList;
 import se.lth.cs.tycho.type.AlgebraicType;
 import se.lth.cs.tycho.type.BoolType;
@@ -49,7 +51,6 @@ import streamblocks.opencl.backend.OpenCLBackend;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.stream.Collectors;
 
@@ -87,11 +88,11 @@ public interface Expressions {
     }
 
     default String evaluate(ExprRef ref) {
-        return "(&" + variables().name(ref.getVariable()) + ")";
+        return variables().name(ref.getVariable());
     }
 
     default String evaluate(ExprDeref deref) {
-        return "(*" + evaluate(deref.getReference()) + ")";
+        return evaluate(deref.getReference());
     }
 
     default String evaluate(ExprGlobalVariable variable) {
@@ -901,30 +902,37 @@ public interface Expressions {
     }
 
     default String evaluate(ExprApplication apply) {
-        Optional<String> directlyCallable = backend().callables().directlyCallableName(apply.getFunction());
         String fn;
         List<String> parameters = new ArrayList<>();
-        if (directlyCallable.isPresent()) {
-            fn = directlyCallable.get();
-            parameters.add("NULL");
-        } else {
-            String name = evaluate(apply.getFunction());
-            fn = name + ".f";
-            parameters.add(name + ".env");
-        }
+
         for (Expression parameter : apply.getArgs()) {
-            String param = evaluate(parameter);
-            Type type = types().type(parameter);
-            parameters.add(backend().statements().passByValue(param, type));
+            parameters.add(evaluate(parameter));
         }
-        Type type = types().type(apply);
+
+        fn = evaluateCall(apply.getFunction());
+
         String result = variables().generateTemp();
-        String decl = backend().declarations().declaration(type, result);
+        String decl = declarations().declarationTemp(types().type(apply), result);
         emitter().emit("%s = %s(%s);", decl, fn, String.join(", ", parameters));
         return result;
     }
 
+    default String evaluateCall(Expression expression) {
+        return evaluate(expression);
+    }
+
+    default String evaluateCall(ExprVariable variable) {
+        IRNode parent = backend().tree().parent(variable);
+
+        if (parent instanceof StmtCall || parent instanceof ExprApplication) {
+            return variable.getVariable().getName();
+        }
+
+        return variables().name(variable.getVariable());
+    }
+
     default String evaluate(ExprLambda lambda) {
+        /*
         backend().emitter().emit("// begin evaluate(ExprLambda)");
         String functionName = backend().callables().functionName(lambda);
         String env = backend().callables().environmentName(lambda);
@@ -939,9 +947,13 @@ public interface Expressions {
 
         backend().emitter().emit("// end evaluate(ExprLambda)");
         return funPtr;
+
+         */
+        throw new Error("not implemented : evaluate(ExprLambda lambda)");
     }
 
     default String evaluate(ExprProc proc) {
+        /*
         backend().emitter().emit("// begin evaluate(ExprProc)");
         String functionName = backend().callables().functionName(proc);
         String env = backend().callables().environmentName(proc);
@@ -955,11 +967,12 @@ public interface Expressions {
         backend().emitter().emit("%s %s = { &%s, &%s };", typeName, funPtr, functionName, env);
 
         backend().emitter().emit("// end evaluate(ExprProc)");
-        return funPtr;
+        return funPtr;*/
+        throw new Error("not implemented : evaluate(ExprProc proc)");
     }
 
     default String evaluate(ExprLet let) {
-        let.forEachChild(backend().callables()::declareEnvironmentForCallablesInScope);
+        //let.forEachChild(backend().callables()::declareEnvironmentForCallablesInScope);
         for (VarDecl decl : let.getVarDecls()) {
             Type type = types().declaredType(decl);
             String name = variables().declarationName(decl);

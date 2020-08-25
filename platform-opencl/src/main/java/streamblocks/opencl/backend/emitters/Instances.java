@@ -207,7 +207,7 @@ public interface Instances {
                     emitter().emit("// -- Scope %d", actor.getScopes().indexOf(scope));
                     for (VarDecl var : scope.getDeclarations()) {
                         if (var.getValue() instanceof ExprLambda || var.getValue() instanceof ExprProc) {
-                            //backend().callables().callablePrototypes(instanceName, var.getValue());
+                            backend().callables().callablePrototypes(instanceName, var.getValue());
                         } else {
                             String decl = declarations().declaration(types().declaredType(var), backend().variables().declarationName(var));
                             emitter().emit("%s;", decl);
@@ -464,7 +464,7 @@ public interface Instances {
                     if (decl.getValue() != null) {
                         Expression expr = decl.getValue();
                         if (expr instanceof ExprLambda || expr instanceof ExprProc) {
-                            backend().callables().callableDefinition(expr);
+                            backend().callables().callableDefinition(instanceName, expr);
                             emitter().emitNewLine();
                         }
                     }
