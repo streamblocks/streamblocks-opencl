@@ -261,7 +261,6 @@ public interface Instances {
 
             emitter().emit("// -- Action Selection");
             emitter().emit("bool schedule();");
-            emitter().emitNewLine();
 
             emitter().decreaseIndentation();
         }
@@ -340,7 +339,6 @@ public interface Instances {
             emitter().decreaseIndentation();
         }
         emitter().emit("}");
-        emitter().emitNewLine();
     }
 
 

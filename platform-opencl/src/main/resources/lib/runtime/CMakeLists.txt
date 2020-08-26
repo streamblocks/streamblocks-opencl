@@ -12,6 +12,7 @@ set(runtime_header
         include/Scheduling.h
         include/FIFO.h
         include/Port.h
+        include/CLI11.h
         include/opencl_arguments.h
         include/Translation.h
         include/utils.h
