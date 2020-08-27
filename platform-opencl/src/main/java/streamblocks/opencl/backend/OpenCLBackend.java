@@ -206,7 +206,7 @@ public interface OpenCLBackend {
 
     @Binding(LAZY)
     default DefaultValues defaultValues() {
-        return MultiJ.from(DefaultValues.class).instance();
+        return MultiJ.from(DefaultValues.class).bind("typeseval").to(typeseval()).instance();
     }
 
     @Binding(LAZY)

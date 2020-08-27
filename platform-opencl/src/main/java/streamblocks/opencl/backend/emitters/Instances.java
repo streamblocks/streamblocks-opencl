@@ -30,6 +30,7 @@ import se.lth.cs.tycho.ir.expr.ExprProc;
 import se.lth.cs.tycho.ir.expr.Expression;
 import se.lth.cs.tycho.ir.network.Instance;
 import se.lth.cs.tycho.type.CallableType;
+import se.lth.cs.tycho.type.ListType;
 import se.lth.cs.tycho.type.Type;
 import streamblocks.opencl.backend.OpenCLBackend;
 
@@ -276,7 +277,7 @@ public interface Instances {
         String className = "c_" + instanceName;
 
 
-        emitter().emit("%s(%s) : %s {", className, entityPorts(actor, "_"), explicitPortInitialization(actor, "_"));
+        emitter().emit("%s(%s) : %s {", className, entityPorts(actor, "_"), explicitInitialization(actor, "_"));
         {
             emitter().increaseIndentation();
 
@@ -291,6 +292,16 @@ public interface Instances {
                     for (VarDecl var : scope.getDeclarations()) {
                         if (scope.isPersistent()) {
                             String decl = backend().variables().declarationName(var);
+
+                            // -- Initialize vector size
+                            Type type = backend().types().declaredType(var);
+                            if (type instanceof ListType) {
+                                ListType lType = (ListType) type;
+                                if (lType.getSize().isPresent()) {
+                                    emitter().emit("%s = %s;", decl, backend().defaultValues().defaultValue(lType));
+                                }
+                            }
+
                             if (var.getValue() != null && !(var.getValue() instanceof ExprInput)) {
                                 if (var.getValue() instanceof ExprList) {
                                     emitter().emit("{");
@@ -315,7 +326,6 @@ public interface Instances {
                                 }
                             }
                         }
-
                     }
                 }
             }
@@ -491,7 +501,7 @@ public interface Instances {
         return String.join(", ", ports);
     }
 
-    default String explicitPortInitialization(Entity entity, String prefix) {
+    default String explicitInitialization(ActorMachine entity, String prefix) {
         List<String> ports = new ArrayList<>();
 
         // -- Input Ports
@@ -503,6 +513,7 @@ public interface Instances {
         for (PortDecl port : entity.getOutputPorts()) {
             ports.add(String.format("%s$FIFO(%s%1$s$FIFO)", port.getName(), prefix));
         }
+
         return String.join(", ", ports);
     }
 

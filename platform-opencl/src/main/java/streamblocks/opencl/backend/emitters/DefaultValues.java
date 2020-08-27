@@ -1,5 +1,7 @@
 package streamblocks.opencl.backend.emitters;
 
+import org.multij.Binding;
+import org.multij.BindingKind;
 import org.multij.Module;
 import se.lth.cs.tycho.type.AlgebraicType;
 import se.lth.cs.tycho.type.AliasType;
@@ -14,9 +16,14 @@ import se.lth.cs.tycho.type.SetType;
 import se.lth.cs.tycho.type.StringType;
 import se.lth.cs.tycho.type.TupleType;
 import se.lth.cs.tycho.type.Type;
+import streamblocks.opencl.backend.OpenCLBackend;
 
 @Module
 public interface DefaultValues {
+
+    @Binding(BindingKind.INJECTED)
+    TypesEvaluator typeseval();
+
     String defaultValue(Type type);
 
     default String defaultValue(CallableType t) {
@@ -41,12 +48,8 @@ public interface DefaultValues {
 
     default String defaultValue(ListType t) {
         if (t.getSize().isPresent()) {
-            StringBuilder builder = new StringBuilder();
             String element = defaultValue(t.getElementType());
-            builder.append("{");
-            builder.append(element);
-            builder.append("}");
-            return builder.toString();
+            return String.format("%s(%s,%s)", typeseval().type(t), t.getSize().getAsInt(), element);
         } else {
             throw new UnsupportedOperationException("Not implemented");
         }

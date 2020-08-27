@@ -2,6 +2,8 @@
 #define __PRELUDE__
 
 #include <iostream>
+#include "native_source.h"
+
 
 namespace prelude {
     inline void print(std::string s) {

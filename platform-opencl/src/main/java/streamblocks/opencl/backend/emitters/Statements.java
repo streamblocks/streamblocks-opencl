@@ -218,7 +218,7 @@ public interface Statements {
     String lvalueIndexing(Type type, LValueIndexer indexer);
 
     default String lvalueIndexing(ListType type, LValueIndexer indexer) {
-        return String.format("%s[%s]", lvalue(indexer.getStructure()), expressions().evaluate(indexer.getIndex()));
+        return String.format("%s.at(%s)", lvalue(indexer.getStructure()), expressions().evaluate(indexer.getIndex()));
     }
 
     default String lvalueIndexing(MapType type, LValueIndexer indexer) {

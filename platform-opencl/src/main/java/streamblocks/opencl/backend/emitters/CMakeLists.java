@@ -126,7 +126,7 @@ public interface CMakeLists {
 
         // -- Target link libraries
         emitter().emit("# -- Target link libraries");
-        emitter().emit("target_link_libraries(%s ${extra_libraries})",
+        emitter().emit("target_link_libraries(%s cl-runtime ${extra_libraries})",
                 backend().task().getIdentifier().getLast().toString());
 
         // -- EOF

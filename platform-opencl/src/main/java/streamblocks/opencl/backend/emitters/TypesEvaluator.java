@@ -4,6 +4,7 @@ import org.multij.Binding;
 import org.multij.BindingKind;
 import org.multij.Module;
 import se.lth.cs.tycho.attribute.Types;
+import se.lth.cs.tycho.phase.TreeShadow;
 import se.lth.cs.tycho.type.AlgebraicType;
 import se.lth.cs.tycho.type.BoolType;
 import se.lth.cs.tycho.type.CallableType;
@@ -76,11 +77,7 @@ public interface TypesEvaluator {
     }
 
     default String type(ListType type) {
-        if (type.getSize().isPresent()) {
-            return String.format("std::array< %s, %d >", type(type.getElementType()), type.getSize().getAsInt());
-        } else {
-            return String.format("std::vector< %s >", type(type.getElementType()));
-        }
+        return String.format("std::vector< %s >", type(type.getElementType()));
     }
 
     /**

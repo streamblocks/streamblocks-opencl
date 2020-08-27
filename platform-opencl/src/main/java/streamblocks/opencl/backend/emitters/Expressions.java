@@ -712,7 +712,7 @@ public interface Expressions {
     default String evaluateComprehension(ExprComprehension comprehension, ListType t) {
         String name = variables().generateTemp();
         String decl = backend().declarations().declaration(t, name);
-        emitter().emit("%s;", decl);
+        emitter().emit("%s = %s;", decl, backend().defaultValues().defaultValue(t));
         String index = variables().generateTemp();
         emitter().emit("size_t %s = 0;", index);
         evaluateListComprehension(comprehension, name, index);
@@ -844,7 +844,7 @@ public interface Expressions {
     String exprIndexing(Type type, ExprIndexer indexer);
 
     default String exprIndexing(ListType type, ExprIndexer indexer) {
-        return String.format("%s[%s]", evaluate(indexer.getStructure()), evaluate(indexer.getIndex()));
+        return String.format("%s.at(%s)", evaluate(indexer.getStructure()), evaluate(indexer.getIndex()));
     }
 
     default String exprIndexing(MapType type, ExprIndexer indexer) {

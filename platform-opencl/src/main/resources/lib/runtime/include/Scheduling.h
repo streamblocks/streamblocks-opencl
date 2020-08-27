@@ -13,7 +13,7 @@ namespace scheduling {
             for (const std::shared_ptr<Actor>& a : actors) {
                 progress |= a->schedule();
             }
-        } while (!progress);
+        } while (progress);
     }
 }
 
