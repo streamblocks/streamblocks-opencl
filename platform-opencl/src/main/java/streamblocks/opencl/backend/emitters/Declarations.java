@@ -54,7 +54,15 @@ public interface Declarations {
     }
 
     default String declaration(ListType type, String name) {
-        return String.format("%s %s", backend().typeseval().type(type), name);
+        return String.format("%s %s%s", backend().typeseval().type(type), name, getListDims(type));
+    }
+
+    default String getListDims(ListType type){
+        if(type.getElementType() instanceof ListType){
+            return String.format("[%s]%s", type.getSize().getAsInt(), getListDims((ListType)type.getElementType()));
+        }else{
+            return String.format("[%s]", type.getSize().getAsInt());
+        }
     }
 
     /*

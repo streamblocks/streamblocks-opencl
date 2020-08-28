@@ -125,7 +125,7 @@ public interface Expressions {
         emitter().emit("%s = %s;", backend().declarations().declaration(type, tmp), backend().defaultValues().defaultValue(type));
         if (input.hasRepeat()) {
             if (input.getOffset() == 0) {
-                emitter().emit("%s$FIFO.elements_preview(%s.data(), %d);", input.getPort().getName(), tmp, input.getRepeat());
+                emitter().emit("%s$FIFO.elements_preview(%s, %d);", input.getPort().getName(), tmp, input.getRepeat());
             } else {
                 throw new RuntimeException("not implemented");
             }
@@ -844,7 +844,7 @@ public interface Expressions {
     String exprIndexing(Type type, ExprIndexer indexer);
 
     default String exprIndexing(ListType type, ExprIndexer indexer) {
-        return String.format("%s.at(%s)", evaluate(indexer.getStructure()), evaluate(indexer.getIndex()));
+        return String.format("%s[%s]", evaluate(indexer.getStructure()), evaluate(indexer.getIndex()));
     }
 
     default String exprIndexing(MapType type, ExprIndexer indexer) {

@@ -293,6 +293,7 @@ public interface Instances {
                         if (scope.isPersistent()) {
                             String decl = backend().variables().declarationName(var);
 
+                            /*
                             // -- Initialize vector size
                             Type type = backend().types().declaredType(var);
                             if (type instanceof ListType) {
@@ -301,6 +302,7 @@ public interface Instances {
                                     emitter().emit("%s = %s;", decl, backend().defaultValues().defaultValue(lType));
                                 }
                             }
+                             */
 
                             if (var.getValue() != null && !(var.getValue() instanceof ExprInput)) {
                                 if (var.getValue() instanceof ExprList) {

@@ -27,7 +27,7 @@ namespace std {
 
             unsigned int source_readByte();
 
-            void source_readNBytes(std::vector<unsigned char> &outTable, unsigned int nbTokenToRead);
+            void source_readNBytes(unsigned char outTable[], unsigned int nbTokenToRead);
 
             unsigned int source_getNbLoop(void);
 

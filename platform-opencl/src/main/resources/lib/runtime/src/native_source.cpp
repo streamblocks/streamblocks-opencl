@@ -86,8 +86,8 @@ unsigned int std::io::source::source_readByte() {
     return file.get();
 }
 
-void std::io::source::source_readNBytes(std::vector<unsigned char> &outTable, unsigned int nbTokenToRead) {
-    file.read((char *) outTable.data(), nbTokenToRead);
+void std::io::source::source_readNBytes(unsigned char outTable[], unsigned int nbTokenToRead) {
+    file.read((char *) outTable, nbTokenToRead);
 }
 
 unsigned int std::io::source::source_getNbLoop(void) {

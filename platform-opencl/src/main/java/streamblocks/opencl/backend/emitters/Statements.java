@@ -88,7 +88,7 @@ public interface Statements {
         } else if (write.getValues().size() == 1) {
             String value = expressions().evaluate(write.getValues().get(0));
             String repeat = expressions().evaluate(write.getRepeatExpression());
-            emitter().emit("%s$FIFO.put_elements(%s.data(), %s);", portName, value, repeat);
+            emitter().emit("%s$FIFO.put_elements(%s, %s);", portName, value, repeat);
         } else {
             throw new Error("not implemented");
         }
@@ -218,7 +218,7 @@ public interface Statements {
     String lvalueIndexing(Type type, LValueIndexer indexer);
 
     default String lvalueIndexing(ListType type, LValueIndexer indexer) {
-        return String.format("%s.at(%s)", lvalue(indexer.getStructure()), expressions().evaluate(indexer.getIndex()));
+        return String.format("%s[%s]", lvalue(indexer.getStructure()), expressions().evaluate(indexer.getIndex()));
     }
 
     default String lvalueIndexing(MapType type, LValueIndexer indexer) {

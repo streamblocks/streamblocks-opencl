@@ -4,7 +4,6 @@ import org.multij.Binding;
 import org.multij.BindingKind;
 import org.multij.Module;
 import se.lth.cs.tycho.attribute.Types;
-import se.lth.cs.tycho.phase.TreeShadow;
 import se.lth.cs.tycho.type.AlgebraicType;
 import se.lth.cs.tycho.type.BoolType;
 import se.lth.cs.tycho.type.CallableType;
@@ -76,25 +75,16 @@ public interface TypesEvaluator {
         return type.getName();
     }
 
+    /*
     default String type(ListType type) {
         return String.format("std::vector< %s >", type(type.getElementType()));
+    }*/
+
+
+    default String type(ListType type) {
+        return String.format("%s", type(type.getElementType()));
     }
 
-    /**
-     * Get The most inner type of a type
-     *
-     * @param type
-     * @return
-     */
-    default Type innerType(Type type) {
-        Type inner = null;
-        if (type instanceof ListType) {
-            inner = innerType((((ListType) type).getElementType()));
-        } else {
-            inner = type;
-        }
-        return inner;
-    }
 
     default boolean isAlgebraicTypeList(Type type) {
         if (!(type instanceof ListType)) {

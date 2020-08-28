@@ -49,7 +49,8 @@ public interface DefaultValues {
     default String defaultValue(ListType t) {
         if (t.getSize().isPresent()) {
             String element = defaultValue(t.getElementType());
-            return String.format("%s(%s,%s)", typeseval().type(t), t.getSize().getAsInt(), element);
+            return String.format("{%s}", element);
+            //return String.format("%s(%s,%s)", typeseval().type(t), t.getSize().getAsInt(), element);
         } else {
             throw new UnsupportedOperationException("Not implemented");
         }
