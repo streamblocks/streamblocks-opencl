@@ -23,11 +23,11 @@ set(runtime_header
 include_directories(${extra_includes})
 add_definitions(${extra_definitions})
 
-add_library(cl-runtime STATIC ${runtime_sources} ${runtime_header})
+add_library(sb-runtime STATIC ${runtime_sources} ${runtime_header})
 
-target_link_libraries(cl-runtime ${extra_libraries})
+target_link_libraries(sb-runtime ${extra_libraries})
 
-install(TARGETS cl-runtime
+install(TARGETS sb-runtime
         ARCHIVE DESTINATION lib)
 
 set(extra_definitions ${extra_definitions} PARENT_SCOPE)

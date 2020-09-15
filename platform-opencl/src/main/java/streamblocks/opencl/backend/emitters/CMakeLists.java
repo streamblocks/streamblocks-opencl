@@ -2,7 +2,6 @@ package streamblocks.opencl.backend.emitters;
 
 import ch.epfl.vlsc.platformutils.Emitter;
 import ch.epfl.vlsc.platformutils.PathUtils;
-import ch.epfl.vlsc.settings.PlatformSettings;
 import org.multij.Binding;
 import org.multij.BindingKind;
 import org.multij.Module;
@@ -52,7 +51,7 @@ public interface CMakeLists {
 
         emitter().emit("include_directories(");
         emitter().increaseIndentation();
-        emitter().emit("lib/runtime/include");
+        emitter().emit("lib/sb-runtime/include");
         emitter().decreaseIndentation();
         emitter().emit(")");
 
@@ -126,7 +125,7 @@ public interface CMakeLists {
 
         // -- Target link libraries
         emitter().emit("# -- Target link libraries");
-        emitter().emit("target_link_libraries(%s cl-runtime ${extra_libraries})",
+        emitter().emit("target_link_libraries(%s sb-runtime ${extra_libraries})",
                 backend().task().getIdentifier().getLast().toString());
 
         // -- EOF

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(sb-opencl-lib)
+project(sb-lib)
 
 find_package(Threads QUIET)
 if(THREADS_FOUND)
