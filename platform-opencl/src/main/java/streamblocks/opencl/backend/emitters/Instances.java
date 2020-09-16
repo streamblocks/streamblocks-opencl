@@ -386,7 +386,7 @@ public interface Instances {
         // if (scope.isPersistent()) {
         if (scope.getDeclarations().size() > 0) {
             if (index != 0) {
-                emitter().emit("%s{", scopePrototype(instanceName, scope, index, true));
+                emitter().emit("inline %s{", scopePrototype(instanceName, scope, index, true));
                 {
                     emitter().increaseIndentation();
 
@@ -419,7 +419,7 @@ public interface Instances {
 
     default void condition(String instanceName, Condition condition, int index) {
         // -- Actor Instance Name
-        emitter().emit("%s{", conditionPrototype(instanceName, condition, index, true));
+        emitter().emit("inline %s{", conditionPrototype(instanceName, condition, index, true));
         emitter().increaseIndentation();
         {
             emitter().emit("return %s;", evaluateCondition(condition));
@@ -452,7 +452,7 @@ public interface Instances {
             String actionTag = ((ExprLiteral) annotation.get().getParameters().get(0).getExpression()).getText();
             emitter().emit("// -- Action Tag : %s", actionTag);
         }
-        emitter().emit("%s{", transitionPrototype(instanceName, transition, index, true));
+        emitter().emit("inline %s{", transitionPrototype(instanceName, transition, index, true));
         {
             emitter().increaseIndentation();
 

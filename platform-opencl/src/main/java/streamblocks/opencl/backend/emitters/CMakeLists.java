@@ -28,7 +28,7 @@ public interface CMakeLists {
         emitter().emitNewLine();
 
         // -- Project name
-        emitter().emit("project (%s-multicore)", backend().task().getIdentifier().getLast().toString());
+        emitter().emit("project (%s)", backend().task().getIdentifier().getLast().toString());
         emitter().emitNewLine();
 
         // -- C Standard
