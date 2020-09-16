@@ -52,6 +52,7 @@ public interface CMakeLists {
         emitter().emit("include_directories(");
         emitter().increaseIndentation();
         emitter().emit("lib/sb-runtime/include");
+        emitter().emit("lib/sb-native/include");
         emitter().decreaseIndentation();
         emitter().emit(")");
 

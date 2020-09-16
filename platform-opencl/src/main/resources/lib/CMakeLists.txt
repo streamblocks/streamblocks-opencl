@@ -20,6 +20,7 @@ endif()
 
 
 include_directories(sb-runtime/include)
+include_directories(sb-native/include)
 
 add_subdirectory(sb-runtime)
 add_subdirectory(sb-native)
