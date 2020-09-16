@@ -1,6 +1,5 @@
 # OpenCL Runtime sources
 set(runtime_sources
-        src/native_source.cpp
         src/opencl_arguments.cpp
         src/Translation.cpp
         src/utils.cpp
@@ -10,7 +9,6 @@ set(runtime_sources
 set(runtime_header
         include/Actor.h
         include/prelude.h
-        include/native_source.h
         include/Scheduling.h
         include/FIFO.h
         include/Port.h
@@ -18,7 +16,7 @@ set(runtime_header
         include/opencl_arguments.h
         include/Translation.h
         include/utils.h
-        include/cl.h)
+        include/cl.h ../sb-native/include/natives.h)
 
 include_directories(${extra_includes})
 add_definitions(${extra_definitions})

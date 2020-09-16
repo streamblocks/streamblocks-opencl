@@ -175,6 +175,7 @@ public interface Instances {
             String headerName = instance.getInstanceName() + ".h";
 
             backend().includeUser(headerName);
+            backend().includeUser("natives.h");
         }
         emitter().emitNewLine();
     }

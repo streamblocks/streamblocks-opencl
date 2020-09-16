@@ -19,8 +19,10 @@ else()
 endif()
 
 
-include_directories(runtime/include)
-add_subdirectory(runtime)
+include_directories(sb-runtime/include)
+
+add_subdirectory(sb-runtime)
+add_subdirectory(sb-native)
 
 set(extra_definitions ${extra_definitions} PARENT_SCOPE)
 set(extra_includes ${extra_includes} PARENT_SCOPE)
