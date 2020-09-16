@@ -12,7 +12,11 @@ void std::video::display::displayYUV_setSize(int width, int height) {
     // allocate window, renderer, texture
     pWindow1 = SDL_CreateWindow("display", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
                                 width, height, SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL);
+#if defined(__APPLE__) || defined(__MACOSX)
+    pRenderer1 = SDL_CreateRenderer(pWindow1, -1, SDL_RENDERER_SOFTWARE);
+#else
     pRenderer1 = SDL_CreateRenderer(pWindow1, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+#endif
     bmpTex1 = SDL_CreateTexture(pRenderer1, SDL_PIXELFORMAT_YV12,
                                 SDL_TEXTUREACCESS_STREAMING, width, height);
     if (pWindow1 == NULL || pRenderer1 == NULL || bmpTex1 == NULL) {
