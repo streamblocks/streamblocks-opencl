@@ -1,11 +1,15 @@
 #pragma once
 
+#ifdef DISPLAY_ENABLE
 #include <SDL.h>
+#endif
+
 #include <stdint.h>
 
 namespace std {
     namespace video {
         namespace display {
+#ifdef DISPLAY_ENABLE
             static SDL_Window *pWindow1;
             static SDL_Renderer *pRenderer1;
             static SDL_Texture *bmpTex1;
@@ -13,7 +17,7 @@ namespace std {
             static int pitch1, size1;
 
             static int init = 0;
-
+#endif
             char displayYUV_getFlags();
 
             void displayYUV_setSize(int width, int height);

@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.10)
 
 project(sb-lib)
 
+# -- Library options
+option(DISPLAY "Display on the screen." ON)
+
 find_package(Threads QUIET)
 if(THREADS_FOUND)
     list(APPEND extra_libraries ${CMAKE_THREAD_LIBS_INIT})

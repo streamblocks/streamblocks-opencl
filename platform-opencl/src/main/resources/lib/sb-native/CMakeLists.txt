@@ -1,10 +1,12 @@
 set(sb_native_sources
         src/sb_native_source.cpp
-)
+        )
 
 set(sb_native_headers
         include/sb_native_source.h
-)
+        include/sb_native_display.h
+        include/sb_native_framerate.h
+        )
 
 include_directories(${extra_includes})
 add_definitions(${extra_definitions})
@@ -12,19 +14,28 @@ add_definitions(${extra_definitions})
 
 # Try to find SDL on the user system
 find_package(SDL2 QUIET)
-if(SDL2_FOUND)
-    list(APPEND extra_includes ${SDL2_INCLUDE_DIRS})
-    string(STRIP ${SDL2_LIBRARIES} SDL2_LIBRARIES)
-    list(APPEND extra_libraries ${SDL2_LIBRARIES})
-    list(APPEND extra_definitions -DDISPLAY_ENABLE)
-    list(APPEND sb_native_headers
-            include/sb_native_display_sdl2.h
-            include/sb_native_framerate_sdl.h
-            )
+if (DISPLAY)
+    if (SDL2_FOUND)
+        list(APPEND extra_includes ${SDL2_INCLUDE_DIRS})
+        string(STRIP ${SDL2_LIBRARIES} SDL2_LIBRARIES)
+        list(APPEND extra_libraries ${SDL2_LIBRARIES})
+        list(APPEND extra_definitions -DDISPLAY_ENABLE)
+
+        list(APPEND sb_native_sources
+                src/sb_native_display_sdl2.cpp
+                src/sb_native_framerate_sdl.cpp
+                )
+    else ()
+        list(APPEND sb_native_sources
+                src/sb_native_no_display.cpp
+                src/sb_native_framerate.cpp
+                )
+    endif ()
+else ()
     list(APPEND sb_native_sources
-            src/sb_native_display_sdl2.cpp
-            src/sb_native_framerate_sdl.cpp
-    )
+            src/sb_native_no_display.cpp
+            src/sb_native_framerate.cpp
+            )
 endif ()
 
 include_directories(${extra_includes})

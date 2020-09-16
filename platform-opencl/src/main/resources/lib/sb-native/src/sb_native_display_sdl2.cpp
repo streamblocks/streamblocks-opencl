@@ -1,5 +1,5 @@
 #include <iostream>
-#include "sb_native_display_sdl2.h"
+#include "sb_native_display.h"
 
 using namespace std::video::display;
 

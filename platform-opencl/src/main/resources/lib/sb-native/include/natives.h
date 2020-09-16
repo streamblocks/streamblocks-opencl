@@ -2,12 +2,7 @@
 #define __NATIVES_H__
 
 #include "sb_native_source.h"
-
-#ifdef DISPLAY_ENABLE
-
-#include "sb_native_display_sdl2.h"
-#include "sb_native_framerate_sdl.h"
-
-#endif
+#include "sb_native_display.h"
+#include "sb_native_framerate.h"
 
 #endif
