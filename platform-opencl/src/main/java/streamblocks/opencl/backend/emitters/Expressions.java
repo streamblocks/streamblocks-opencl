@@ -400,7 +400,7 @@ public interface Expressions {
         Expression left = binaryOp.getOperands().get(0);
         Expression right = binaryOp.getOperands().get(1);
         String andResult = variables().generateTemp();
-        emitter().emit("_Bool %s;", andResult);
+        emitter().emit("bool %s;", andResult);
         emitter().emit("if (%s) {", evaluate(left));
         emitter().increaseIndentation();
         emitter().emit("%s = %s;", andResult, evaluate(right));
@@ -431,7 +431,7 @@ public interface Expressions {
         Expression left = binaryOp.getOperands().get(0);
         Expression right = binaryOp.getOperands().get(1);
         String orResult = variables().generateTemp();
-        emitter().emit("_Bool %s;", orResult);
+        emitter().emit("bool %s;", orResult);
         emitter().emit("if (%s) {", evaluate(left));
         emitter().increaseIndentation();
         emitter().emit("%s = true;", orResult);
