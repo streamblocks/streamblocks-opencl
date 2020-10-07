@@ -1,11 +1,13 @@
 set(sb_native_sources
         src/sb_native_source.cpp
+        src/sb_native_counters.cpp
         )
 
 set(sb_native_headers
         include/sb_native_source.h
         include/sb_native_display.h
         include/sb_native_framerate.h
+        include/sb_native_counters.h
         )
 
 include_directories(${extra_includes})
