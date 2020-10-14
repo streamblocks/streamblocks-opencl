@@ -66,6 +66,7 @@ T FIFO<T, N>::get_element() {
     T element = data_ptr[state.read_index++];
     if (state.read_index == N)state.read_index = 0;
     if (state.full && state.read_index != state.write_index)state.full = false;
+    if (state.full && state.read_index == 0 && state.write_index == 0)state.full = false;
     return element;
 }
 

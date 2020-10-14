@@ -4,5 +4,6 @@
 #include "sb_native_source.h"
 #include "sb_native_display.h"
 #include "sb_native_framerate.h"
+#include "sb_native_counters.h"
 
 #endif
