@@ -17,7 +17,7 @@ find_package(SDL2 QUIET)
 if (DISPLAY)
     if (SDL2_FOUND)
         list(APPEND extra_includes ${SDL2_INCLUDE_DIRS})
-        string(STRIP ${SDL2_LIBRARIES} SDL2_LIBRARIES)
+        string(STRIP "${SDL2_LIBRARIES}" SDL2_LIBRARIES)
         list(APPEND extra_libraries ${SDL2_LIBRARIES})
         list(APPEND extra_definitions -DDISPLAY_ENABLE)
 
