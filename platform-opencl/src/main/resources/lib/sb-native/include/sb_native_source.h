@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <stdlib.h>
+#include <stdio.h>
 
 namespace std {
     namespace io {
@@ -33,6 +34,19 @@ namespace std {
             void source_decrementNbLoops();
 
             bool source_isMaxLoopsReached();
+
+            /*Native functions and variables added for dpd benchmark: start here*/
+            static FILE *file_ii = NULL;
+            static FILE *file_iq = NULL;
+            static int count;
+
+            void source_init_dpd(std::string fileName_ii, std::string fileName_iq);
+            float source_read(FILE * file);
+            float source_read_i();
+            float source_read_q();
+            void close_all();
+            void close_file(FILE ** file);
+            /*Native functions and variables added for dpd benchmark: end here*/
         }
     }
 }

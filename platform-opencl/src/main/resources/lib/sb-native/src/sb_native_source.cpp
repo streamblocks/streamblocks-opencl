@@ -101,3 +101,83 @@ void std::io::source::source_decrementNbLoops() {
 bool std::io::source::source_isMaxLoopsReached() {
     return nbLoops != -1 && loopsCount <= 0;
 }
+
+/*Native functions added for dpd benchmark: start here*/
+void std::io::source::source_init_dpd(std::string fileName_ii, std::string fileName_iq)
+{
+	count = 0;
+	atexit(close_all);
+	if (file_ii == NULL)
+	{
+		file_ii = fopen(fileName_ii.c_str(), "r");
+
+		if (file_ii == NULL)
+		{
+			printf("Unable to open file %s\nExit\n", fileName_ii);
+			exit(0);
+		}
+		else
+			printf("Opened file %s\n", fileName_ii.c_str());
+	}
+
+	if (file_iq == NULL)
+	{
+		file_iq = fopen(fileName_iq.c_str(), "r");
+
+		if (file_iq == NULL)
+		{
+			printf("Unable to open file %s\nExit\n", fileName_iq);
+			exit(0);
+		}
+		else
+			printf("Opened file %s\n", fileName_iq.c_str());
+	}
+
+
+}
+
+float std::io::source::source_read(FILE *file)
+{
+	int ret_val;
+	float sample = 0.0;
+
+	if (file != NULL)
+	{
+		ret_val = fscanf(file, "%f\n", &sample);
+
+		if (ret_val != 1)
+		{
+			//close_all();
+			//exit(0);
+		}
+	}
+	return sample;
+	count++;
+}
+
+float std::io::source::source_read_i()
+{
+	return source_read(file_ii);
+}
+
+float std::io::source::source_read_q()
+{
+	return source_read(file_iq);
+}
+
+void std::io::source::close_all()
+{
+	printf("Read %i complex samples.\nClosing files.\n", count);
+	close_file(&file_ii);
+	close_file(&file_iq);
+}
+
+void std::io::source::close_file(FILE **file)
+{
+	if (file[0] != NULL)
+	{
+		fclose(file[0]);
+		file[0] = NULL;
+	}
+}
+/*Native functions added for dpd benchmark: end here*/

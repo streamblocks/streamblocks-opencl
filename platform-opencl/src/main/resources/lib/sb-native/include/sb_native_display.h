@@ -29,6 +29,19 @@ namespace std {
             void displayYUV_init();
 
             void display_close();
+
+            /*Native functions and variables added for dpd benchmark: start here*/
+            static FILE *file_oi = NULL;
+            static FILE *file_oq = NULL;
+            static int count;
+
+            void close_all();
+            void close_file(FILE ** file);
+            void sink_init(std::string fileName_oi, std::string fileName_oq);
+            void file_write(FILE * file, float value);
+            void sink_consume_i(float value);
+            void sink_consume_q(float value);
+            /*Native functions and variables added for dpd benchmark: end here*/
         }
     }
 }
