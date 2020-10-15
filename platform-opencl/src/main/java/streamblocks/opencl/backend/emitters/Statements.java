@@ -54,16 +54,16 @@ public interface Statements {
         return backend().variables();
     }
 
+    default Types types() {
+        return backend().types();
+    }
+
     default Declarations declarations() {
         return backend().declarations();
     }
 
     default TypesEvaluator typeseval() {
         return backend().typeseval();
-    }
-
-    default Types types() {
-        return backend().types();
     }
 
     default Expressions expressions() {

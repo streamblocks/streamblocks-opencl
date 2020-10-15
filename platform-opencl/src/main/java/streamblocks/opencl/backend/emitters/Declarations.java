@@ -25,8 +25,10 @@ public interface Declarations {
     @Binding(BindingKind.INJECTED)
     Types types();
 
-    @Binding(BindingKind.INJECTED)
-    TypesEvaluator typeseval();
+
+    default TypesEvaluator typeseval(){
+        return backend().typeseval();
+    }
 
 
     default String declaration(Type type, String name) {

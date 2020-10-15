@@ -42,6 +42,8 @@ import java.util.Optional;
 @Module
 public interface Instances {
 
+    String ACC_ANNOTATION = "acc";
+
     @Binding(BindingKind.INJECTED)
     OpenCLBackend backend();
 
@@ -452,16 +454,20 @@ public interface Instances {
             String actionTag = ((ExprLiteral) annotation.get().getParameters().get(0).getExpression()).getText();
             emitter().emit("// -- Action Tag : %s", actionTag);
         }
-        emitter().emit("inline %s{", transitionPrototype(instanceName, transition, index, true));
-        {
-            emitter().increaseIndentation();
+        boolean acceleratedTransition = Annotation.hasAnnotationWithName(ACC_ANNOTATION, transition.getAnnotations());
 
-            transition.getBody().forEach(backend().statements()::execute);
-
-            emitter().decreaseIndentation();
+        if (acceleratedTransition) {
+            backend().clTransitions().acceleratedTransition(instanceName, transition, index);
+        } else {
+            emitter().emit("inline %s{", transitionPrototype(instanceName, transition, index, true));
+            {
+                emitter().increaseIndentation();
+                transition.getBody().forEach(backend().statements()::execute);
+                emitter().decreaseIndentation();
+            }
+            emitter().emit("}");
+            emitter().emitNewLine();
         }
-        emitter().emit("}");
-        emitter().emitNewLine();
     }
 
     // ------------------------------------------------------------------------

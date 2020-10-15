@@ -122,7 +122,7 @@ public interface Expressions {
     default String evaluate(ExprInput input) {
         String tmp = variables().generateTemp();
         Type type = types().type(input);
-        emitter().emit("%s = %s;", backend().declarations().declaration(type, tmp), backend().defaultValues().defaultValue(type));
+        emitter().emit("%s = %s;", declarations().declaration(type, tmp), backend().defaultValues().defaultValue(type));
         if (input.hasRepeat()) {
             if (input.getOffset() == 0) {
                 emitter().emit("%s$FIFO.elements_preview(%s, %d);", input.getPort().getName(), tmp, input.getRepeat());

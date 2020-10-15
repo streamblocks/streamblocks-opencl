@@ -23,6 +23,7 @@ import se.lth.cs.tycho.ir.entity.Entity;
 import se.lth.cs.tycho.ir.network.Instance;
 import se.lth.cs.tycho.phase.TreeShadow;
 import streamblocks.opencl.backend.emitters.*;
+import streamblocks.opencl.backend.emitters.opencl.*;
 
 import static org.multij.BindingKind.INJECTED;
 import static org.multij.BindingKind.LAZY;
@@ -122,6 +123,11 @@ public interface OpenCLBackend {
         return new Emitter();
     }
 
+    @Binding(LAZY)
+    default Emitter clEmitter() {
+        return new Emitter();
+    }
+
     // ------------------------------------------------------------------------
     // -- Boxes
 
@@ -181,7 +187,7 @@ public interface OpenCLBackend {
         return MultiJ.from(Tuples.class).bind("backend").to(this).instance();
     }
 
-    default PatternMatching patmat(){
+    default PatternMatching patmat() {
         return MultiJ.from(PatternMatching.class).bind("backend").to(this).instance();
     }
 
@@ -214,7 +220,6 @@ public interface OpenCLBackend {
         return MultiJ.from(Declarations.class)
                 .bind("backend").to(this)
                 .bind("types").to(types())
-                .bind("typeseval").to(typeseval())
                 .instance();
     }
 
@@ -266,6 +271,40 @@ public interface OpenCLBackend {
     @Binding(LAZY)
     default CMakeLists cmakelists() {
         return MultiJ.from(CMakeLists.class).bind("backend").to(this).instance();
+    }
+
+    // ------------------------------------------------------------------------
+    // -- OpenCL Emitters
+
+    @Binding(LAZY)
+    default OpenCLTypesEvaluator clTypeseval() {
+        return MultiJ.from(OpenCLTypesEvaluator.class)
+                .bind("types").to(types())
+                .bind("alias").to(alias())
+                .instance();
+    }
+
+    @Binding(LAZY)
+    default OpenCLDeclarations clDeclarations() {
+        return MultiJ.from(OpenCLDeclarations.class)
+                .bind("backend").to(this)
+                .bind("types").to(types())
+                .instance();
+    }
+
+    @Binding(LAZY)
+    default OpenCLExpressions clExpressions() {
+        return MultiJ.from(OpenCLExpressions.class).bind("backend").to(this).instance();
+    }
+
+    @Binding(LAZY)
+    default OpenCLStatements clStatements() {
+        return MultiJ.from(OpenCLStatements.class).bind("backend").to(this).instance();
+    }
+
+    @Binding(LAZY)
+    default OpenCLTransition clTransitions() {
+        return MultiJ.from(OpenCLTransition.class).bind("backend").to(this).instance();
     }
 
     // ------------------------------------------------------------------------
