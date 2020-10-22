@@ -47,6 +47,20 @@ namespace std {
             void close_all();
             void close_file(FILE ** file);
             /*Native functions and variables added for dpd benchmark: end here*/
+
+            /*Native functions and variables added for ZigBee benchmark: start here*/
+            static FILE *file_zb_i = NULL;
+            static FILE *file_zb_o = NULL;
+
+            static int source_packets;
+            static int sink_packets;
+
+            void source_init_ZB(std::string fileName_ZB_i);
+            unsigned char source_readByte_ZB();
+            int source_sizeOfFile_ZB();
+            void throw_away(int value);
+            void print_cyclecount();
+            /*Native functions and variables added for ZigBee benchmark: end here*/
         }
     }
 }

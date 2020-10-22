@@ -181,3 +181,78 @@ void std::io::source::close_file(FILE **file)
 	}
 }
 /*Native functions added for dpd benchmark: end here*/
+
+/*Native functions and variables added for ZigBee benchmark: start here*/
+void std::io::source::source_init_ZB(std::string fileName_ZB_i)
+{
+	source_packets = 0;
+	sink_packets = 0;
+	if (file_zb_i == NULL)
+	{
+		file_zb_i = fopen(fileName_ZB_i.c_str(), "r");
+
+		if (file_zb_i == NULL)
+		{
+			printf("Unable to open file %s\nExit\n", fileName_ZB_i);
+			close_file(&file_zb_i);
+			exit(0);
+		}
+		else
+			printf("Opened file %s\n", fileName_ZB_i.c_str());
+	}
+}
+
+unsigned char std::io::source::source_readByte_ZB()
+{
+    int ret_val;
+    int sample;
+
+    ret_val = fscanf(file_zb_i, "%i\n", &sample);
+
+    if(ret_val != 1){
+        printf("Packet payload ended unexpectedly\nExit\n");
+        close_file(&file_zb_i);
+        exit(0);
+    }
+
+    return (unsigned char) sample;
+}
+int std::io::source::source_sizeOfFile_ZB()
+{
+    int ret_val;
+    int sample;
+
+    ret_val = fscanf(file_zb_i, "%i\n", &sample);
+
+    if(ret_val != 1){
+        return 1;
+    }
+    source_packets++;
+    return sample;
+}
+
+void std::io::source::throw_away(int value)
+{
+    if(file_zb_o == NULL){
+        file_zb_o = fopen("tx_stream.out", "w");
+        if (file_zb_o == NULL)
+        {
+            printf("Unable to open output file tx_stream.out\nExit\n");
+            close_file(&file_zb_o);
+            exit(0);
+        }
+    }
+
+    fprintf(file_zb_o, "%i\n", value);
+}
+
+void std::io::source::print_cyclecount()
+{
+    sink_packets++;
+
+    if(feof(file_zb_o) && (sink_packets == source_packets) ){
+        close_file(&file_zb_o);
+        exit(0);
+    }
+}
+/*Native functions and variables added for ZigBee benchmark: end here*/
