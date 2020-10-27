@@ -250,7 +250,7 @@ void std::io::source::print_cyclecount()
 {
     sink_packets++;
 
-    if(feof(file_zb_o) && (sink_packets == source_packets) ){
+    if(feof(file_zb_i) && (sink_packets == source_packets) ){
         close_file(&file_zb_o);
         exit(0);
     }
