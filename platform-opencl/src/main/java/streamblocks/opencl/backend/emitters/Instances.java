@@ -10,6 +10,7 @@ import se.lth.cs.tycho.attribute.GlobalNames;
 import se.lth.cs.tycho.attribute.Types;
 import se.lth.cs.tycho.ir.Annotation;
 import se.lth.cs.tycho.ir.Parameter;
+import se.lth.cs.tycho.ir.Port;
 import se.lth.cs.tycho.ir.decl.GlobalEntityDecl;
 import se.lth.cs.tycho.ir.decl.ParameterVarDecl;
 import se.lth.cs.tycho.ir.decl.VarDecl;
@@ -38,6 +39,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import java.util.Map;
 
 @Module
 public interface Instances {
@@ -120,13 +123,20 @@ public interface Instances {
 
         // -- Transitions
         emitter().emit("// -- Transitions");
-        actor.getTransitions().forEach(t -> transition(instanceName, t, actor.getTransitions().indexOf(t)));
+        // -- Check and create cl file for current instance
+        if (backend().clTransitions().anyAccTransition(actor)) {
+            backend().clTransitions().setupCLKernel(instanceName, actor);
+        }
+        actor.getTransitions().forEach(t -> transition(instanceName, t, actor.getTransitions().indexOf(t), actorMachine));
 
         // -- Callables
         callables(instanceName, actorMachine);
 
         // -- EOF
         emitter().close();
+        if (backend().clTransitions().anyAccTransition(actor)) {
+            backend().clTransitions().clCloseFile();
+        }
     }
 
     default void emitHeader(Instance instance) {
@@ -205,6 +215,14 @@ public interface Instances {
             actor.getOutputPorts().forEach(p -> emitter().emit("%s;", declarations().portOutputDeclaration(instanceName, p, "")));
             emitter().emitNewLine();
 
+            // -- Check and add OpenCL class declarations
+            if (backend().clTransitions().anyAccTransition(actor)) {
+                emitter().emit("// -- OpenCL class declarations");
+                emitter().emit("opencl_arguments ocl;");
+                emitter().emit("cl_event *event;");
+                emitter().emit("cl_int status_flag;");
+                emitter().emitNewLine();
+            }
 
             for (Scope scope : actor.getScopes()) {
                 if (!scope.getDeclarations().isEmpty()) {
@@ -353,6 +371,35 @@ public interface Instances {
 
             emitter().decreaseIndentation();
         }
+
+        emitter().emitNewLine();
+        // -- Check and add OpenCL initializations
+        // - Initialize variables first
+        if (backend().clTransitions().anyAccTransition(actor)) {
+            emitter().increaseIndentation();
+            emitter().emit("// -- OpenCL Initializations");
+            emitter().emit("event = NULL;");
+            emitter().emit("status_flag = CL_COMPLETE;");
+            // - Initialize OpenCL utilities
+            emitter().emit("// -- OpenCL Utilities");
+            emitter().emit("SetupOpenCL(&ocl, CL_DEVICE_TYPE_GPU, \"NVIDIA CUDA\");");
+            emitter().emit("CreateAndBuildProgram(&ocl, \"%s\" );", instanceName + ".cl");
+            emitter().emit("cl_int err = CL_SUCCESS;");
+        }
+        for (int i = 0; i < actor.getTransitions().size(); i++) {
+            Transition transition = actor.getTransitions().get(i);
+            int index = actor.getTransitions().indexOf(transition);
+            if (Annotation.hasAnnotationWithName(ACC_ANNOTATION, transition.getAnnotations())) {
+                emitter().emit("ocl.kernels.push_back(clCreateKernel(ocl.program, \"%s\", &err));", "transition$" + index);
+                emitter().emit("if (err != CL_SUCCESS) {");
+                emitter().increaseIndentation();
+                emitter().emit("std::cout << \"Kernel Creation failed. clCreateKernel for %s in %s returned \" << TranslateErrorCode(err);", "transition$" + index, instanceName);
+                emitter().emit("exit(err);");
+                emitter().decreaseIndentation();
+                emitter().emit("}");
+            }
+        }
+        emitter().decreaseIndentation();
         emitter().emit("}");
     }
 
@@ -447,8 +494,7 @@ public interface Instances {
 
     // ------------------------------------------------------------------------
     // -- Transitions
-
-    default void transition(String instanceName, Transition transition, int index) {
+    default void transition(String instanceName, Transition transition, int index, ActorMachine actor) {
         Optional<Annotation> annotation = Annotation.getAnnotationWithName("ActionId", transition.getAnnotations());
         if (annotation.isPresent()) {
             String actionTag = ((ExprLiteral) annotation.get().getParameters().get(0).getExpression()).getText();
@@ -456,8 +502,38 @@ public interface Instances {
         }
         boolean acceleratedTransition = Annotation.hasAnnotationWithName(ACC_ANNOTATION, transition.getAnnotations());
 
+        String clTextInstances = "";
+        String clTextKerArg = "";
+        int kerArgCount = 0;
         if (acceleratedTransition) {
-            backend().clTransitions().acceleratedTransition(instanceName, transition, index);
+            backend().clTransitions().acceleratedTransition(instanceName, transition, index, actor.getScopes());
+            emitter().emit("inline %s{", transitionPrototype(instanceName, transition, index, true));
+            {
+                emitter().increaseIndentation();
+                clTextInstances = "int number$instances = std::min({";
+                for (Map.Entry<Port, Integer> entry : transition.getInputRates().entrySet()) {
+                    clTextInstances += entry.getKey().getName() + "$FIFO" + ".get_size()/ " + entry.getValue() + ", ";
+                    clTextKerArg += "clSetKernelArg(this->ocl.kernels[" + index + "] , " + kerArgCount + " , sizeof(cl_mem), (void *)" + entry.getKey().getName() + "$FIFO.get_read_buffer(number$instances * " + entry.getValue() + ", this->ocl));\n\t";
+                    kerArgCount++;
+                }
+                for (Map.Entry<Port, Integer> entry : transition.getOutputRates().entrySet()) {
+                    clTextInstances += entry.getKey().getName() + "$FIFO" + ".get_free_space()/ " + entry.getValue() + ",";
+                    clTextKerArg += "clSetKernelArg(this->ocl.kernels[" + index + "] , " + kerArgCount + " , sizeof(cl_mem), (void *)" + entry.getKey().getName() + "$FIFO.get_write_buffer(number$instances * " + entry.getValue() + ", this->ocl));\n\t";
+                    kerArgCount++;
+                }
+                clTextInstances = clTextInstances.replaceAll(",$", "");
+                clTextKerArg = clTextKerArg.replaceAll("\n\t$", "");
+                clTextInstances += "});";
+                emitter().emitRawLine("\t" + clTextInstances);
+                emitter().emit("this->ocl.globalWorkSize[0] = number$instances;");
+                emitter().emit("this->ocl.work_Dim = 1;");
+                emitter().emit("this->ocl.localWorkSize[0] = NULL;");
+                emitter().emitRawLine("\t" + clTextKerArg);
+                emitter().emit("ExecuteKernel(&this->ocl, %s, this->event);", index);
+                emitter().decreaseIndentation();
+            }
+            emitter().emit("}");
+            emitter().emitNewLine();
         } else {
             emitter().emit("inline %s{", transitionPrototype(instanceName, transition, index, true));
             {

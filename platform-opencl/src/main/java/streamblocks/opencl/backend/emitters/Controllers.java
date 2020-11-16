@@ -6,7 +6,11 @@ import org.multij.Binding;
 import org.multij.BindingKind;
 import org.multij.Module;
 import se.lth.cs.tycho.attribute.ScopeLiveness;
+import se.lth.cs.tycho.ir.Annotation;
+import se.lth.cs.tycho.ir.Port;
+import se.lth.cs.tycho.ir.entity.PortDecl;
 import se.lth.cs.tycho.ir.entity.am.ActorMachine;
+import se.lth.cs.tycho.ir.entity.am.Transition;
 import se.lth.cs.tycho.ir.entity.am.ctrl.Exec;
 import se.lth.cs.tycho.ir.entity.am.ctrl.Instruction;
 import se.lth.cs.tycho.ir.entity.am.ctrl.InstructionKind;
@@ -17,16 +21,14 @@ import se.lth.cs.tycho.settings.Configuration;
 import se.lth.cs.tycho.settings.OnOffSetting;
 import streamblocks.opencl.backend.OpenCLBackend;
 
-import java.util.BitSet;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import javax.lang.model.type.NullType;
+import java.util.*;
 import java.util.function.Function;
 
 @Module
 public interface Controllers {
+    String ACC_ANNOTATION = "acc";
+
     @Binding(BindingKind.INJECTED)
     OpenCLBackend backend();
 
@@ -45,6 +47,48 @@ public interface Controllers {
 
         emitter().emit("bool progress = false;");
         emitter().emit("");
+
+        // -- Check and add OpenCL port buffers functions
+        List<String> clTextList = new ArrayList<String>();
+        String clText = "";
+        for (int i = 0; i < actorMachine.getTransitions().size(); i++) {
+            Transition transition = actorMachine.getTransitions().get(i);
+            int index = actorMachine.getTransitions().indexOf(transition);
+            if (Annotation.hasAnnotationWithName(ACC_ANNOTATION, transition.getAnnotations())) {
+                for (Map.Entry<Port, Integer> entry : transition.getInputRates().entrySet()) {
+                    clText = entry.getKey().getName() + "$FIFO" + ".opencl_read_done();";
+                    if(!clTextList.contains(clText)){
+                        clTextList.add(clText);
+                    }
+                }
+                for (Map.Entry<Port, Integer> entry : transition.getOutputRates().entrySet()) {
+                    clText = entry.getKey().getName() + "$FIFO" + ".opencl_write_done(this->ocl);";
+                    if(!clTextList.contains(clText)){
+                        clTextList.add(clText);
+                    }
+                }
+            }
+        }
+        for(int i = 0; i < clTextList.size(); i++){
+            emitter().emitRawLine("\t" + clTextList.get(i));
+        }
+        emitter().emitNewLine();
+        /*if (backend().clInstance().anyAccTransition(actorMachine)) {
+            emitter().emit("// -- Check OpenCL port buffers status");
+            if (!actorMachine.getInputPorts().isEmpty()) {
+                for (PortDecl port : actorMachine.getInputPorts()) {
+                    String portString = port.getName() + "$FIFO";
+                    emitter().emit("%s.opencl_read_done();", portString);
+                }
+            }
+            if (!actorMachine.getOutputPorts().isEmpty()) {
+                for (PortDecl port : actorMachine.getOutputPorts()) {
+                    String portString = port.getName() + "$FIFO";
+                    emitter().emit("%s.opencl_write_done(ocl);", portString);
+                }
+            }
+            emitter().emitNewLine();
+        }*/
 
         jumpInto(waitTargets.stream().mapToInt(stateMap::get).collect(BitSet::new, BitSet::set, BitSet::or), stateMap.get(actorMachine.controller().getInitialState()));
 

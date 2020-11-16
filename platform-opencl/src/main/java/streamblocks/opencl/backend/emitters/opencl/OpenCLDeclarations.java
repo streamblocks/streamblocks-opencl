@@ -2,7 +2,9 @@ package streamblocks.opencl.backend.emitters.opencl;
 
 import org.multij.Module;
 import se.lth.cs.tycho.ir.entity.PortDecl;
+import se.lth.cs.tycho.type.ListType;
 import se.lth.cs.tycho.type.StringType;
+import se.lth.cs.tycho.type.Type;
 import streamblocks.opencl.backend.emitters.Declarations;
 import streamblocks.opencl.backend.emitters.TypesEvaluator;
 
@@ -15,7 +17,17 @@ public interface OpenCLDeclarations extends Declarations {
 
     @Override
     default String declaration(StringType type, String name) {
-        throw new UnsupportedOperationException("String type declarartion is not permitted in OpenCL kernels.");
+        return typeseval().type(type) + " " + name;
+    }
+
+    @Override
+    default String declaration(Type type, String name) {
+        return typeseval().type(type) + " " + name;
+    }
+
+    @Override
+    default String declaration(ListType type, String name) {
+        return String.format("%s %s%s", typeseval().type(type), name, getListDims(type));
     }
 
     @Override

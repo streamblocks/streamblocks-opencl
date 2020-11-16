@@ -14,8 +14,8 @@ template<typename T, int N>
 class Port {
 private:
     std::vector<std::reference_wrapper<FIFO<T, N>>> connected_FIFOs;
-    cl_mem read_buffer;
-    cl_mem write_buffer;
+    cl_mem read_buffer = NULL;
+    cl_mem write_buffer = NULL;
     int write_offset{0};
 
 public:

@@ -307,6 +307,13 @@ public interface OpenCLBackend {
         return MultiJ.from(OpenCLTransition.class).bind("backend").to(this).instance();
     }
 
+    @Binding(LAZY)
+    default OpenCLCallables clCallables() {
+        return MultiJ.from(OpenCLCallables.class).bind("backend").to(this).instance();
+    }
+
+
+
     // ------------------------------------------------------------------------
     // -- Emitters for includes
 
