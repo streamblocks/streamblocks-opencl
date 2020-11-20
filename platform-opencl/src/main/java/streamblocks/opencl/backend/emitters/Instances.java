@@ -382,7 +382,8 @@ public interface Instances {
             emitter().emit("status_flag = CL_COMPLETE;");
             // - Initialize OpenCL utilities
             emitter().emit("// -- OpenCL Utilities");
-            emitter().emit("SetupOpenCL(&ocl, CL_DEVICE_TYPE_GPU, \"NVIDIA CUDA\");");
+            emitter().emit("//SetupOpenCL(&ocl, CL_DEVICE_TYPE_GPU, \"NVIDIA CUDA\");");
+            emitter().emit("SetupOpenCLAuto(&ocl, opt);");
             emitter().emit("CreateAndBuildProgram(&ocl, \"%s\" );", instanceName + ".cl");
             emitter().emit("cl_int err = CL_SUCCESS;");
         }

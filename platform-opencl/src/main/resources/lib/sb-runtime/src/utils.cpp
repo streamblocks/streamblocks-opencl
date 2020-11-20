@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <iostream>
 
+
+
 cl_int ReadSourceFromFile(const char *fileName, char **source, size_t *sourceSize) {
     cl_int errorCode = CL_SUCCESS;
     FILE *fp = NULL;
@@ -23,6 +25,71 @@ cl_int ReadSourceFromFile(const char *fileName, char **source, size_t *sourceSiz
         }
     }
     return errorCode;
+}
+
+void displayCLInfobyParam() {
+	char platformName[64];
+	cl_int errorCode = CL_SUCCESS;
+	cl_uint numPlatforms = 0;
+	cl_uint number_of_cores;
+	cl_device_id device_id;
+	cl_device_type device_type;
+	size_t returnedSize;
+	errorCode = clGetPlatformIDs(0, NULL, &numPlatforms);
+	if (errorCode != CL_SUCCESS) {
+		std::cout << "Error: clGetplatform_ids() to get num platforms returned " << TranslateErrorCode(errorCode)
+			<< std::endl;
+		exit(0);
+	}
+	if (numPlatforms == 0) {
+		std::cout << "Error: No platforms found!" << std::endl;
+		exit(0);
+	}
+	std::vector<cl_platform_id> platforms(numPlatforms);
+	errorCode = clGetPlatformIDs(numPlatforms, &platforms[0], NULL);
+	if (errorCode != CL_SUCCESS) {
+		std::cout << "Error: clGetplatform_ids() to get platforms returned " << TranslateErrorCode(errorCode)
+			<< std::endl;
+		exit(0);
+	}
+	std::cout << "Display all platforms: " << std::endl << std::endl;
+	for (cl_uint i = 0; i < numPlatforms; ++i) {
+		bool platformFound = false;
+		cl_uint numDevices = 0;
+		size_t stringLength = 0;
+		errorCode = clGetPlatformInfo(platforms[i], CL_PLATFORM_NAME, 0, NULL, &stringLength);
+		if (errorCode != CL_SUCCESS) {
+			std::cout << "Error: clGetPlatformInfo() to get CL_PLATFORM_NAME length returned "
+				<< TranslateErrorCode(errorCode) << std::endl;
+			platformFound = false;
+			errorCode = CL_SUCCESS;
+		}
+		else {
+			errorCode = clGetPlatformInfo(platforms[i], CL_PLATFORM_NAME, stringLength, platformName, NULL);
+			if (errorCode != CL_SUCCESS) {
+				std::cout << "Error: clGetplatform_ids() to get CL_PLATFORM_NAME returned "
+					<< TranslateErrorCode(errorCode) << std::endl;
+				platformFound = false;
+				errorCode = CL_SUCCESS;
+			}
+			else {
+				std::cout << "Device name: " << platformName << std::endl;
+				errorCode = clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_ALL, 1, &device_id, NULL);
+				errorCode = clGetDeviceInfo(device_id, CL_DEVICE_TYPE, sizeof(device_type), &device_type, &returnedSize);
+				if (device_type & CL_DEVICE_TYPE_CPU) {
+					std::cout << "Device type: CPU" << std::endl;
+					errorCode = clGetDeviceInfo(device_id, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(returnedSize), &number_of_cores, &returnedSize);
+					std::cout << "Number of available cores: " << number_of_cores << std::endl << std::endl;
+				}
+				else if (device_type & CL_DEVICE_TYPE_GPU) {
+					std::cout << "Device type: GPU" << std::endl;
+					errorCode = clGetDeviceInfo(device_id, CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(returnedSize), &number_of_cores, &returnedSize);
+					std::cout << "Number of available SMs: " << number_of_cores << std::endl << std::endl;
+				}
+			}
+		}
+
+	}
 }
 
 cl_platform_id FindOpenCLPlatform(cl_device_type deviceType, std::string platformName) {
@@ -144,6 +211,58 @@ cl_int GetPlatformAndDeviceVersion(cl_platform_id platformID, opencl_arguments *
         ocl->compilerVersion = OPENCL_VERSION_2_0;
     }
     return errorCode;
+}
+
+cl_int SetupOpenCLAuto(opencl_arguments *ocl, cmd_line_options *opt) {
+	cl_int errorCode = CL_SUCCESS;
+	cl_device_type deviceType;
+    std::string platformName(opt->device_name);
+
+	if (!std::strcmp(opt->device_type, "CPU"))
+		deviceType = CL_DEVICE_TYPE_CPU;
+	else if (!std::strcmp(opt->device_type, "GPU"))
+		deviceType = CL_DEVICE_TYPE_GPU;
+
+	cl_platform_id platformID = FindOpenCLPlatform(deviceType, platformName);
+	if (platformID == NULL) {
+		std::cout << "Error: Failed to find OpenCL platform." << std::endl;
+		return CL_INVALID_VALUE;
+	}
+
+	cl_context_properties contextProperties[] = { CL_CONTEXT_PLATFORM, (cl_context_properties)platformID, 0 };
+	ocl->context = clCreateContextFromType(contextProperties, deviceType, NULL, NULL, &errorCode);
+	if ((errorCode != CL_SUCCESS) || (NULL == ocl->context)) {
+		std::cout << "Couldn't create a context, clCreateContextFromType() returned " << TranslateErrorCode(errorCode)
+			<< std::endl;
+		return errorCode;
+	}
+
+	errorCode = clGetContextInfo(ocl->context, CL_CONTEXT_DEVICES, sizeof(cl_device_id), &ocl->device, NULL);
+	if (errorCode != CL_SUCCESS) {
+		std::cout << "Error: clGetContextInfo() to get list of devices returned " << TranslateErrorCode(errorCode)
+			<< std::endl;
+		return errorCode;
+	}
+
+	GetPlatformAndDeviceVersion(platformID, ocl);
+
+#ifdef CL_VERSION_2_0
+	if (OPENCL_VERSION_2_0 == ocl->deviceVersion) {
+		const cl_command_queue_properties properties[] = { CL_QUEUE_PROPERTIES, CL_QUEUE_PROFILING_ENABLE, 0 };
+		ocl->commandQueue = clCreateCommandQueueWithProperties(ocl->context, ocl->device, properties, &errorCode);
+	}
+	else {
+		cl_command_queue_properties properties = CL_QUEUE_PROFILING_ENABLE;
+		ocl->commandQueue = clCreateCommandQueue(ocl->context, ocl->device, properties, &errorCode);
+	}
+#else
+	cl_command_queue_properties properties = CL_QUEUE_PROFILING_ENABLE;
+	ocl->commandQueue = clCreateCommandQueue(ocl->context, ocl->device, properties, &errorCode);
+#endif
+	if (errorCode != CL_SUCCESS) {
+		std::cout << "Error: clCreateCommandQueue() returned " << TranslateErrorCode(errorCode) << std::endl;
+	}
+	return errorCode;
 }
 
 cl_int SetupOpenCL(opencl_arguments *ocl, cl_device_type deviceType, std::string platformName) {

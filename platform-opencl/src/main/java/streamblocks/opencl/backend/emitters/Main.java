@@ -38,6 +38,9 @@ public interface Main {
         // -- Includes
         defineIncludes(network);
 
+        // -- Command line options
+        defineCommandLineOptions();
+
         // -- Main
         defineMain(network);
 
@@ -59,6 +62,136 @@ public interface Main {
             backend().includeUser(headerName);
         }
         emitter().emitNewLine();
+        emitter().emit("// -- Header for cmd_L_arguments");
+        emitter().emit("#include \"utils.h\"");
+        emitter().emitNewLine();
+    }
+
+    default void defineCommandLineOptions() {
+
+        emitter().emitNewLine();
+        emitter().emit("// -- Add command line options");
+        emitter().emitNewLine();
+        emitter().emit("cmd_line_options *opt;");
+        emitter().emitNewLine();
+
+        emitter().emit("void parse_command_line_input(int argc, char *argv[]) {");
+        emitter().increaseIndentation();
+        {
+            emitter().emit("opt = new cmd_line_options;");
+            emitter().emit("std::string name_string = \"\";");
+            emitter().emitNewLine();
+            emitter().emit("//set default");
+            emitter().emit("opt->input_directory = NULL;");
+            emitter().emit("opt->input_file = NULL;");
+            emitter().emit("opt->output_file = NULL;");
+            emitter().emit("opt->output_directory = NULL;");
+            emitter().emit("opt->device_name = NULL;");
+            emitter().emit("opt->device_type = NULL;");
+
+            emitter().emit("//read command line parameters");
+            emitter().emit("for (int i = 1; i < argc; i++) {");
+            emitter().increaseIndentation();
+            {
+                emitter().emit("if (strcmp(argv[i], \"-i\") == 0) {");
+                emitter().increaseIndentation();
+                {
+                    emitter().emit("opt->input_file = argv[++i];");
+                }
+                emitter().decreaseIndentation();
+                emitter().emit("}");
+
+                emitter().emit("else if (strcmp(argv[i], \"-d\") == 0) {");
+                emitter().increaseIndentation();
+                {
+                    emitter().emit("opt->input_directory = argv[++i];");
+                }
+                emitter().decreaseIndentation();
+                emitter().emit("}");
+
+                emitter().emit("else if (strcmp(argv[i], \"-w\") == 0) {");
+                emitter().increaseIndentation();
+                {
+                    emitter().emit("opt->output_file = argv[++i];");
+                }
+                emitter().decreaseIndentation();
+                emitter().emit("}");
+
+                emitter().emit("else if (strcmp(argv[i], \"-h\") == 0) {");
+                emitter().increaseIndentation();
+                {
+                    emitter().emit("std::cout << \"\\nUsage: [options]\\n\"");
+                    emitter().emit("\"\\nCommon arguments:\\n\"");
+                    emitter().emit("\"-i <file>     Specify an input file.\\n\"");
+                    emitter().emit("\"-h            Print this message.\\n\"");
+                    emitter().emit("\"\\nOpenCL specific arguments:\\n\"");
+                    emitter().emit("\"-clinfo       Display the names of all the available OpenCL devices.\\n\"");
+                    emitter().emit("\"\\nOpenCL Runtime arguments:\\n\"");
+                    emitter().emit("\"-dt           Specify device type {CPU or GPU} to be used as accelerator.\\n\"");
+                    emitter().emit("\"-dn           Specify device name to be used as accelerator.\\n\"");
+                    emitter().emit("\"\\nOther specific arguments:\\n\"");
+                    emitter().emit("\"Under construnction.\\n\";");
+                    emitter().emit("exit(0);");
+                }
+                emitter().decreaseIndentation();
+                emitter().emit("}");
+
+                emitter().emit("else if (strcmp(argv[i], \"-clinfo\") == 0) {");
+                emitter().increaseIndentation();
+                {
+                    emitter().emit("displayCLInfobyParam();");
+                    emitter().emit("exit(0);");
+                }
+                emitter().decreaseIndentation();
+                emitter().emit("}");
+
+                emitter().emit("else if (strcmp(argv[i], \"-dt\") == 0) {");
+                emitter().increaseIndentation();
+                {
+                    emitter().emit("opt->device_type = argv[++i];");
+                }
+                emitter().decreaseIndentation();
+                emitter().emit("}");
+
+                emitter().emit("else if (strcmp(argv[i], \"-dn\") == 0) {");
+                emitter().increaseIndentation();
+                {
+                    emitter().emit("opt->device_name = argv[i];");
+                    emitter().emit("while (i + 1 < argc) {");
+                    emitter().increaseIndentation();
+                    {
+                        emitter().emit("std::string device_name(argv[++i]);");
+                        emitter().emit("if(i + 1 == argc)");
+                        emitter().increaseIndentation();
+                        {
+                            emitter().emit("name_string += device_name;");
+                        }
+                        emitter().decreaseIndentation();
+                        emitter().emit("else name_string += device_name + \" \";");
+                    }
+                    emitter().decreaseIndentation();
+                    emitter().emit("}");
+
+                    emitter().emit("strcpy(opt->device_name, (char*)name_string.c_str());");
+                }
+                emitter().decreaseIndentation();
+                emitter().emit("}");
+
+                emitter().emit("else {");
+                emitter().increaseIndentation();
+                {
+                    emitter().emit("std::cout << \"Error:Unknown input\" << std::endl;");
+                    emitter().emit("exit(0);");
+                }
+                emitter().decreaseIndentation();
+                emitter().emit("}");
+            }
+            emitter().decreaseIndentation();
+            emitter().emit("}");
+        }
+        emitter().decreaseIndentation();
+        emitter().emit("}");
+
     }
 
     default void defineFIFOs(Network network) {
@@ -140,6 +273,8 @@ public interface Main {
         emitter().emit("int main(int argc, char *argv[]) {");
         {
             emitter().increaseIndentation();
+
+            emitter().emit("parse_command_line_input(argc, argv);");
 
             // -- FIFOs
             defineFIFOs(network);
